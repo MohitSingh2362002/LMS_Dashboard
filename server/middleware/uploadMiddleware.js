@@ -20,13 +20,23 @@ const storage = multer.diskStorage({
   }
 });
 
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/")) {
-    cb(null, true);
-    return;
-  }
+const createUpload = (predicate, errorMessage) =>
+  multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+      if (predicate(file)) {
+        cb(null, true);
+        return;
+      }
 
-  cb(new Error("Only image uploads are allowed"));
-};
+      cb(new Error(errorMessage));
+    }
+  });
 
-export const upload = multer({ storage, fileFilter });
+const isImage = (file) => file.mimetype.startsWith("image/");
+const isPdf = (file) =>
+  file.mimetype === "application/pdf" || path.extname(file.originalname).toLowerCase() === ".pdf";
+
+export const upload = createUpload(isImage, "Only image uploads are allowed");
+export const uploadPdfFiles = createUpload(isPdf, "Only PDF uploads are allowed");
+export { uploadDir };

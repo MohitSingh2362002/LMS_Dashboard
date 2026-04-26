@@ -9,6 +9,7 @@ export const navigationByRole = {
   ],
   instructor: [
     { label: "Overview", to: "/instructor" },
+    { label: "Live Tests & Notes", to: "/instructor/resources" },
     { label: "Live Classes", to: "/instructor/live-classes" },
     { label: "Q&A", to: "/instructor/questions" }
   ],

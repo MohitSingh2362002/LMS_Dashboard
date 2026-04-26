@@ -5,10 +5,11 @@ import {
   duplicateCourse,
   getCourseById,
   getCourses,
-  updateCourse
+  updateCourse,
+  updateCourseResources
 } from "../controllers/courseController.js";
 import { authorize, protect } from "../middleware/authMiddleware.js";
-import { upload } from "../middleware/uploadMiddleware.js";
+import { upload, uploadPdfFiles } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -18,6 +19,13 @@ router
   .post(protect, authorize("admin"), upload.single("thumbnail"), createCourse);
 
 router.post("/:id/duplicate", protect, authorize("admin"), duplicateCourse);
+router.put(
+  "/:id/resources",
+  protect,
+  authorize("admin", "instructor"),
+  uploadPdfFiles.array("noteFiles", 10),
+  updateCourseResources
+);
 
 router
   .route("/:id")

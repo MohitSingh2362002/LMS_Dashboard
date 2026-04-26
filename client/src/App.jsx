@@ -12,6 +12,7 @@ import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
 import InstructorLiveClassesPage from "./pages/instructor/InstructorLiveClassesPage";
+import InstructorCourseResourcesPage from "./pages/instructor/InstructorCourseResourcesPage";
 import InstructorQuestionsPage from "./pages/instructor/InstructorQuestionsPage";
 import LearnerDashboardPage from "./pages/learner/LearnerDashboardPage";
 import CourseViewerPage from "./pages/learner/CourseViewerPage";
@@ -65,6 +66,7 @@ function App() {
         }
       >
         <Route index element={<InstructorDashboardPage />} />
+        <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />
         <Route path="questions" element={<InstructorQuestionsPage />} />
       </Route>

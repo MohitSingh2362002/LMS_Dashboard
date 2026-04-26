@@ -7,7 +7,7 @@ import Loader from "../../components/Loader";
 import EmptyState from "../../components/EmptyState";
 import Stars from "../../components/Stars";
 import { downloadCertificate } from "../../utils/certificate";
-import { getFullImageUrl, stripHtml, average } from "../../utils/helpers";
+import { getFullImageUrl, stripHtml, average, getLiveTestStatus } from "../../utils/helpers";
 import { buildLiveClassJoinUrl } from "../../utils/liveClass";
 import { useAuth } from "../../context/AuthContext";
 
@@ -107,45 +107,79 @@ const LearnerDashboardPage = () => {
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {enrollments.map((enrollment) => (
-              <article key={enrollment._id} className="overflow-hidden rounded-[28px] bg-white shadow-panel">
-                <div className="h-44 bg-slate-100">
-                  {enrollment.course?.thumbnail ? (
-                    <img src={getFullImageUrl(enrollment.course.thumbnail)} alt={enrollment.course.title} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-teal-100 to-amber-100 font-display text-3xl">
-                      {enrollment.course?.title?.slice(0, 1)}
+            {enrollments.map((enrollment) => {
+              const liveTestStatus = getLiveTestStatus(enrollment.course?.liveTest);
+
+              return (
+                <article key={enrollment._id} className="overflow-hidden rounded-[28px] bg-white shadow-panel">
+                  <div className="h-44 bg-slate-100">
+                    {enrollment.course?.thumbnail ? (
+                      <img src={getFullImageUrl(enrollment.course.thumbnail)} alt={enrollment.course.title} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-teal-100 to-amber-100 font-display text-3xl">
+                        {enrollment.course?.title?.slice(0, 1)}
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-display text-2xl">{enrollment.course?.title}</h3>
+                    <p className="mt-1 text-sm text-slate-500">{enrollment.course?.instructorDisplayName || enrollment.course?.instructor?.name}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {enrollment.course?.notes?.length ? (
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                          {enrollment.course.notes.length} note{enrollment.course.notes.length === 1 ? "" : "s"}
+                        </span>
+                      ) : null}
+                      {enrollment.course?.liveTest?.enabled ? (
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            liveTestStatus.tone === "emerald"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : liveTestStatus.tone === "amber"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          Live Test {liveTestStatus.label}
+                        </span>
+                      ) : null}
                     </div>
-                  )}
-                </div>
-                <div className="p-5">
-                  <h3 className="font-display text-2xl">{enrollment.course?.title}</h3>
-                  <p className="mt-1 text-sm text-slate-500">{enrollment.course?.instructorDisplayName || enrollment.course?.instructor?.name}</p>
-                  <div className="mt-4 h-3 rounded-full bg-slate-100">
-                    <div className="h-3 rounded-full bg-teal-700" style={{ width: `${enrollment.progress}%` }} />
+                    <div className="mt-4 h-3 rounded-full bg-slate-100">
+                      <div className="h-3 rounded-full bg-teal-700" style={{ width: `${enrollment.progress}%` }} />
+                    </div>
+                    <p className="mt-2 text-sm text-slate-500">{enrollment.progress}% complete</p>
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <Link to={`/learner/courses/${enrollment._id}`} className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
+                        Continue Learning
+                      </Link>
+                      {enrollment.progress === 100 && enrollment.course?.advancedSettings?.certificateEnabled ? (
+                        <button
+                          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+                          onClick={() =>
+                            downloadCertificate({
+                              learnerName: user.name,
+                              courseTitle: enrollment.course.title
+                            })
+                          }
+                        >
+                          Download Certificate
+                        </button>
+                      ) : null}
+                      {liveTestStatus.canJoin ? (
+                        <a
+                          href={enrollment.course?.liveTest?.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+                        >
+                          Live Test
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
-                  <p className="mt-2 text-sm text-slate-500">{enrollment.progress}% complete</p>
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <Link to={`/learner/courses/${enrollment._id}`} className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
-                      Continue Learning
-                    </Link>
-                    {enrollment.progress === 100 && enrollment.course?.advancedSettings?.certificateEnabled ? (
-                      <button
-                        className="rounded-2xl border px-4 py-3 text-sm font-medium"
-                        onClick={() =>
-                          downloadCertificate({
-                            learnerName: user.name,
-                            courseTitle: enrollment.course.title
-                          })
-                        }
-                      >
-                        Download Certificate
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              );
+            })}
           </div>
         )}
       </section>

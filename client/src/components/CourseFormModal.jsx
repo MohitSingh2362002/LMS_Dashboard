@@ -22,6 +22,9 @@ const CourseFormModal = ({ open, onClose, onSubmit, instructors, initialValue, l
   const [activeTab, setActiveTab] = useState("details");
   const [form, setForm] = useState(defaultCourse);
 
+  const getInstructorName = (instructorId) =>
+    instructors.find((item) => item._id === instructorId)?.name || "";
+
   useEffect(() => {
     if (!initialValue) {
       setForm(defaultCourse);
@@ -139,7 +142,16 @@ const CourseFormModal = ({ open, onClose, onSubmit, instructors, initialValue, l
               <select
                 className="w-full rounded-2xl border border-slate-200 px-4 py-3"
                 value={form.instructor}
-                onChange={(e) => setForm({ ...form, instructor: e.target.value })}
+                onChange={(e) => {
+                  const nextInstructorId = e.target.value;
+                  setForm((current) => ({
+                    ...current,
+                    instructor: nextInstructorId,
+                    instructorDisplayName: nextInstructorId
+                      ? getInstructorName(nextInstructorId)
+                      : ""
+                  }));
+                }}
               >
                 <option value="">Select instructor</option>
                 {instructors.map((instructor) => (
