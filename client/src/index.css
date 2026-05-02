@@ -63,3 +63,24 @@ body {
   transform: rotate(-22deg) scale(1.4);
   transform-origin: center;
 }
+
+/* ── Scrollbar polish ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* ── Sidebar backdrop ── */
+.sidebar-backdrop {
+  @apply fixed inset-0 z-30 bg-black/30 backdrop-blur-sm transition-opacity;
+}

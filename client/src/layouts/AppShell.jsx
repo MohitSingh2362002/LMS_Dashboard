@@ -27,6 +27,15 @@ const AppShell = () => {
     return () => socket.disconnect();
   }, [user?._id]);
 
+  // Close sidebar on Escape key
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
+
   const requestNotificationPermission = async () => {
     if (!("Notification" in window)) return;
     if (Notification.permission === "default") {
@@ -37,9 +46,18 @@ const AppShell = () => {
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(13,148,136,0.12),_transparent_32%),linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)] text-slate-900">
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
+        {/* Backdrop overlay for mobile */}
+        {open ? (
+          <div
+            className="sidebar-backdrop lg:hidden"
+            onClick={() => setOpen(false)}
+            aria-hidden="true"
+          />
+        ) : null}
+
         <aside
           className={classNames(
-            "fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white/90 p-6 shadow-panel backdrop-blur transition-transform lg:static lg:translate-x-0",
+            "fixed inset-y-0 left-0 z-40 w-72 border-r border-slate-200 bg-white/95 p-6 shadow-panel backdrop-blur-lg transition-transform duration-300 ease-out lg:static lg:translate-x-0",
             open ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -47,7 +65,7 @@ const AppShell = () => {
             <p className="font-display text-2xl text-teal-800">LMS Studio</p>
             <p className="mt-2 text-sm text-slate-500">Role-based learning operations platform</p>
           </div>
-          <nav className="space-y-2">
+          <nav className="space-y-1 overflow-y-auto" style={{ maxHeight: "calc(100vh - 140px)" }}>
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -56,9 +74,9 @@ const AppShell = () => {
                 onClick={() => setOpen(false)}
                 className={({ isActive }) =>
                   classNames(
-                    "block rounded-2xl px-4 py-3 text-sm font-medium transition",
+                    "block rounded-2xl px-4 py-3 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-teal-700 text-white"
+                      ? "bg-teal-700 text-white shadow-md"
                       : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                   )
                 }
@@ -73,31 +91,32 @@ const AppShell = () => {
           <header className="sticky top-0 z-30 border-b border-white/50 bg-white/70 px-4 py-4 backdrop-blur lg:px-8">
             <div className="flex items-center justify-between gap-4">
               <button
-                className="rounded-xl border border-slate-200 px-3 py-2 text-sm lg:hidden"
+                className="rounded-xl border border-slate-200 px-3 py-2 text-sm transition hover:bg-slate-50 lg:hidden"
                 onClick={() => setOpen((value) => !value)}
               >
-                Menu
+                ☰ Menu
               </button>
-              <div>
+              <div className="hidden sm:block">
                 <p className="text-xs uppercase tracking-[0.3em] text-teal-700">{user.role}</p>
                 <h1 className="font-display text-2xl text-slate-900">Welcome back, {user.name}</h1>
               </div>
+              <p className="font-display text-lg text-slate-900 sm:hidden">LMS Studio</p>
               <div className="flex items-center gap-3">
-                <div className="hidden text-right sm:block">
+                <div className="hidden text-right md:block">
                   <p className="text-sm font-semibold">{user.email}</p>
                   <p className="text-xs text-slate-500">Signed in</p>
                 </div>
                 <button
-                  className="hidden rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium sm:block"
+                  className="hidden rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium transition hover:bg-slate-50 sm:block"
                   onClick={requestNotificationPermission}
                 >
-                  Alerts
+                  🔔 Alerts
                 </button>
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-700 text-sm font-bold uppercase text-white">
                   {user.name.slice(0, 2)}
                 </div>
                 <button
-                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white"
+                  className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
                   onClick={logout}
                 >
                   Logout

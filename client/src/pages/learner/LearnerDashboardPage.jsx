@@ -6,6 +6,9 @@ import useFetch from "../../hooks/useFetch";
 import Loader from "../../components/Loader";
 import EmptyState from "../../components/EmptyState";
 import Stars from "../../components/Stars";
+import StatCard from "../../components/StatCard";
+import ChartCard from "../../components/charts/ChartCard";
+import BarChart from "../../components/charts/BarChart";
 import { downloadCertificate } from "../../utils/certificate";
 import { getFullImageUrl, stripHtml, average, getLiveTestStatus } from "../../utils/helpers";
 import { buildLiveClassJoinUrl } from "../../utils/liveClass";
@@ -35,6 +38,23 @@ const LearnerDashboardPage = () => {
     () => questions.filter((item) => item.question.toLowerCase().includes(search.toLowerCase())),
     [questions, search]
   );
+
+  const dashStats = useMemo(() => {
+    const avgProgress = enrollments.length
+      ? Math.round(enrollments.reduce((s, e) => s + (e.progress || 0), 0) / enrollments.length)
+      : 0;
+    const completed = enrollments.filter((e) => e.progress === 100).length;
+    const liveCount = Array.isArray(liveClasses) ? liveClasses.filter((lc) => lc.status === "live").length : 0;
+    return { avgProgress, completed, liveCount };
+  }, [enrollments, liveClasses]);
+
+  const courseProgressChart = useMemo(() => ({
+    labels: enrollments.slice(0, 8).map((e) => {
+      const t = e.course?.title || "Course";
+      return t.length > 14 ? t.slice(0, 14) + "…" : t;
+    }),
+    values: enrollments.slice(0, 8).map((e) => e.progress || 0),
+  }), [enrollments]);
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -94,16 +114,35 @@ const LearnerDashboardPage = () => {
     }
   };
 
-  if (loading) return <Loader label="Loading your courses..." />;
+  if (loading) return <Loader variant="skeleton" label="Loading your courses..." />;
 
   return (
     <div className="space-y-8">
+      {/* Stats row */}
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Enrolled Courses" value={enrollments.length} helper="Active course enrollments" icon="📚" accentColor="teal" />
+        <StatCard label="Completed" value={dashStats.completed} helper="Courses finished at 100%" icon="✅" accentColor="indigo" />
+        <StatCard label="Avg Progress" value={`${dashStats.avgProgress}%`} helper="Across all courses" icon="📈" accentColor="amber" trend={dashStats.avgProgress >= 50 ? "up" : "neutral"} />
+        <StatCard label="Live Now" value={dashStats.liveCount} helper="Active live classes" icon="🔴" accentColor="rose" />
+      </div>
+
+      {/* Course progress chart */}
+      {enrollments.length > 0 ? (
+        <ChartCard title="Course Progress" subtitle="Your progress across enrolled courses">
+          <BarChart
+            labels={courseProgressChart.labels}
+            datasets={[{ label: "Progress %", data: courseProgressChart.values, backgroundColor: "rgba(15, 118, 110, 0.85)" }]}
+            height={220}
+          />
+        </ChartCard>
+      ) : null}
+
       <section>
         <h2 className="font-display text-3xl text-slate-900">My Courses</h2>
         <p className="mt-2 text-sm text-slate-500">Continue learning, track progress, and download certificates when you finish.</p>
         {!enrollments.length ? (
           <div className="mt-6">
-            <EmptyState title="No enrolled courses yet" description="Enroll in a course from the catalog below to get started." />
+            <EmptyState title="No enrolled courses yet" description="Enroll in a course from the catalog below to get started." icon="📖" />
           </div>
         ) : (
           <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -111,7 +150,7 @@ const LearnerDashboardPage = () => {
               const liveTestStatus = getLiveTestStatus(enrollment.course?.liveTest);
 
               return (
-                <article key={enrollment._id} className="overflow-hidden rounded-[28px] bg-white shadow-panel">
+                <article key={enrollment._id} className="animate-fadeIn overflow-hidden rounded-[28px] bg-white shadow-panel transition hover:shadow-lg">
                   <div className="h-44 bg-slate-100">
                     {enrollment.course?.thumbnail ? (
                       <img src={getFullImageUrl(enrollment.course.thumbnail)} alt={enrollment.course.title} className="h-full w-full object-cover" />
@@ -145,16 +184,16 @@ const LearnerDashboardPage = () => {
                       ) : null}
                     </div>
                     <div className="mt-4 h-3 rounded-full bg-slate-100">
-                      <div className="h-3 rounded-full bg-teal-700" style={{ width: `${enrollment.progress}%` }} />
+                      <div className="h-3 rounded-full bg-teal-700 transition-all" style={{ width: `${enrollment.progress}%` }} />
                     </div>
                     <p className="mt-2 text-sm text-slate-500">{enrollment.progress}% complete</p>
                     <div className="mt-5 flex flex-wrap gap-2">
-                      <Link to={`/learner/courses/${enrollment._id}`} className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
+                      <Link to={`/learner/courses/${enrollment._id}`} className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-teal-800">
                         Continue Learning
                       </Link>
                       {enrollment.progress === 100 && enrollment.course?.advancedSettings?.certificateEnabled ? (
                         <button
-                          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+                          className="rounded-2xl border px-4 py-3 text-sm font-medium transition hover:bg-slate-50"
                           onClick={() =>
                             downloadCertificate({
                               learnerName: user.name,
@@ -170,7 +209,7 @@ const LearnerDashboardPage = () => {
                           href={enrollment.course?.liveTest?.link}
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-2xl border px-4 py-3 text-sm font-medium"
+                          className="rounded-2xl border px-4 py-3 text-sm font-medium transition hover:bg-slate-50"
                         >
                           Live Test
                         </a>
@@ -184,59 +223,71 @@ const LearnerDashboardPage = () => {
         )}
       </section>
 
-      <section className="rounded-[28px] bg-white p-6 shadow-panel">
+      <section className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-display text-2xl">Course Catalog</h2>
             <p className="mt-2 text-sm text-slate-500">Browse available published courses and enroll in one click.</p>
           </div>
         </div>
-        <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-          {availableCourses.map((course) => (
-            <div key={course._id} className="rounded-3xl border border-slate-100 p-5">
-              <h3 className="font-display text-2xl">{course.title}</h3>
-              <p className="mt-2 text-sm text-slate-500">{stripHtml(course.tagline || course.description)}</p>
-              <p className="mt-3 text-sm font-semibold text-teal-700">
-                {course.pricing?.type === "free" ? "Free" : `${course.pricing.currency} ${course.pricing.amount}`}
-              </p>
-              <button className="mt-5 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white" onClick={() => enroll(course._id)}>
-                Enroll Now
-              </button>
-            </div>
-          ))}
-        </div>
+        {!availableCourses.length ? (
+          <div className="mt-6">
+            <EmptyState title="All caught up!" description="You're enrolled in all available courses." icon="🎉" />
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {availableCourses.map((course) => (
+              <div key={course._id} className="rounded-3xl border border-slate-100 p-5 transition hover:border-teal-200 hover:shadow-md">
+                <h3 className="font-display text-2xl">{course.title}</h3>
+                <p className="mt-2 text-sm text-slate-500">{stripHtml(course.tagline || course.description)}</p>
+                <p className="mt-3 text-sm font-semibold text-teal-700">
+                  {course.pricing?.type === "free" ? "Free" : `${course.pricing.currency} ${course.pricing.amount}`}
+                </p>
+                <button className="mt-5 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800" onClick={() => enroll(course._id)}>
+                  Enroll Now
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
-      <section className="rounded-[28px] bg-white p-6 shadow-panel">
+      <section className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
         <h2 className="font-display text-2xl">Live Classes</h2>
         <p className="mt-2 text-sm text-slate-500">Join live sessions from your dashboard when they are active.</p>
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          {liveClasses.map((liveClass) => (
-            <div key={liveClass._id} className="rounded-2xl border border-slate-100 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{liveClass.title}</p>
-                  <p className="mt-1 text-sm text-slate-500">{liveClass.course?.title || "Standalone session"}</p>
+        {!liveClasses.length ? (
+          <div className="mt-5">
+            <EmptyState title="No live classes" description="Scheduled and active live classes will appear here." icon="📡" />
+          </div>
+        ) : (
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            {liveClasses.map((liveClass) => (
+              <div key={liveClass._id} className="rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{liveClass.title}</p>
+                    <p className="mt-1 text-sm text-slate-500">{liveClass.course?.title || "Standalone session"}</p>
+                  </div>
+                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${liveClass.status === "live" ? "bg-emerald-100 text-emerald-700" : liveClass.status === "scheduled" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
+                    {liveClass.status}
+                  </span>
                 </div>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${liveClass.status === "live" ? "bg-emerald-100 text-emerald-700" : liveClass.status === "scheduled" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
-                  {liveClass.status}
-                </span>
+                {liveClass.status === "live" ? (
+                  <button
+                    className="mt-4 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                    onClick={() => window.open(buildLiveClassJoinUrl(liveClass, user), "_blank", "noopener,noreferrer")}
+                  >
+                    Join Live Class
+                  </button>
+                ) : null}
               </div>
-              {liveClass.status === "live" ? (
-                <button
-                  className="mt-4 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white"
-                  onClick={() => window.open(buildLiveClassJoinUrl(liveClass, user), "_blank", "noopener,noreferrer")}
-                >
-                  Join Live Class
-                </button>
-              ) : null}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-        <div className="rounded-[28px] bg-white p-6 shadow-panel">
+        <div className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
           <h2 className="font-display text-2xl">Public Q&A</h2>
           <p className="mt-2 text-sm text-slate-500">Ask a question and browse answered ones.</p>
           <select className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
@@ -246,21 +297,25 @@ const LearnerDashboardPage = () => {
             ))}
           </select>
           <textarea className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3" rows="4" placeholder="Ask your question here" value={question} onChange={(e) => setQuestion(e.target.value)} />
-          <button className="mt-4 rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white" onClick={submitQuestion}>
+          <button className="mt-4 rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-teal-800" onClick={submitQuestion}>
             Submit Question
           </button>
           <input className="mt-6 w-full rounded-2xl border border-slate-200 px-4 py-3" placeholder="Search answered questions" value={search} onChange={(e) => setSearch(e.target.value)} />
           <div className="mt-4 space-y-3">
-            {filteredQuestions.map((item) => (
-              <details key={item._id} className="rounded-2xl border border-slate-100 p-4">
-                <summary className="cursor-pointer font-medium text-slate-900">{item.question}</summary>
-                <p className="mt-3 text-sm text-slate-500">{item.answer}</p>
-              </details>
-            ))}
+            {filteredQuestions.length === 0 ? (
+              <p className="py-4 text-center text-sm text-slate-400">No questions match your search.</p>
+            ) : (
+              filteredQuestions.map((item) => (
+                <details key={item._id} className="rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50">
+                  <summary className="cursor-pointer font-medium text-slate-900">{item.question}</summary>
+                  <p className="mt-3 text-sm text-slate-500">{item.answer || "Awaiting an answer..."}</p>
+                </details>
+              ))
+            )}
           </div>
         </div>
 
-        <div className="rounded-[28px] bg-white p-6 shadow-panel">
+        <div className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
           <h2 className="font-display text-2xl">Course Reviews</h2>
           <div className="mt-5 space-y-6">
             {enrollments.map((enrollment) => {
@@ -302,11 +357,11 @@ const LearnerDashboardPage = () => {
                     }
                   />
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <button className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white" onClick={() => submitReview(courseId, ownReview)}>
+                    <button className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800" onClick={() => submitReview(courseId, ownReview)}>
                       {ownReview ? "Update Review" : "Submit Review"}
                     </button>
                     {ownReview ? (
-                      <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-medium text-rose-600" onClick={() => deleteReview(ownReview._id)}>
+                      <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50" onClick={() => deleteReview(ownReview._id)}>
                         Delete Review
                       </button>
                     ) : null}

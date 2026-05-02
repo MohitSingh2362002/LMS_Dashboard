@@ -4,6 +4,10 @@ import api from "../../api/client";
 import useFetch from "../../hooks/useFetch";
 import Loader from "../../components/Loader";
 import StatCard from "../../components/StatCard";
+import ChartCard from "../../components/charts/ChartCard";
+import BarChart from "../../components/charts/BarChart";
+import DoughnutChart from "../../components/charts/DoughnutChart";
+import LineChart from "../../components/charts/LineChart";
 import { formatDate } from "../../utils/helpers";
 
 const AdminDashboardPage = () => {
@@ -13,23 +17,23 @@ const AdminDashboardPage = () => {
   const { data: questions, loading: loadingQuestions } = useFetch(() => api.get("/questions"), []);
   const { data: batches, loading: loadingBatches } = useFetch(() => api.get("/batches"), []);
   const { data: migrations, loading: loadingMigrations } = useFetch(() => api.get("/batches/migrations"), []);
+  const { data: analytics, loading: loadingAnalytics } = useFetch(() => api.get("/analytics/admin"), []);
 
   const stats = useMemo(() => {
-    const roleCounts = users.reduce(
-      (counts, user) => ({ ...counts, [user.role]: (counts[user.role] || 0) + 1 }),
-      {}
-    );
-    const pendingMigrations = migrations.filter((item) => item.status === "pending").length;
+    const roleCounts = users.reduce
+      ? users.reduce((counts, user) => ({ ...counts, [user.role]: (counts[user.role] || 0) + 1 }), {})
+      : {};
+    const pendingMigrations = Array.isArray(migrations) ? migrations.filter((item) => item.status === "pending").length : 0;
 
     return {
-      courses: courses.length,
-      activeBatches: batches.filter((batch) => batch.status === "active").length,
+      courses: Array.isArray(courses) ? courses.length : 0,
+      activeBatches: Array.isArray(batches) ? batches.filter((batch) => batch.status === "active").length : 0,
       learners: roleCounts.learner || 0,
       parents: roleCounts.parent || 0,
       instructors: roleCounts.instructor || 0,
       pendingMigrations,
-      unansweredQuestions: questions.filter((item) => !item.isAnswered).length,
-      lowReviews: reviews.filter((item) => item.rating <= 2).length
+      unansweredQuestions: Array.isArray(questions) ? questions.filter((item) => !item.isAnswered).length : 0,
+      lowReviews: Array.isArray(reviews) ? reviews.filter((item) => item.rating <= 2).length : 0,
     };
   }, [courses, users, questions, reviews, batches, migrations]);
 
@@ -37,14 +41,35 @@ const AdminDashboardPage = () => {
     () =>
       ["foundation", "growth", "merit", "ranker"].map((group) => ({
         group,
-        count: batches.filter((batch) => batch.performanceGroup === group && batch.status === "active").length
+        count: Array.isArray(batches) ? batches.filter((batch) => batch.performanceGroup === group && batch.status === "active").length : 0,
       })),
     [batches]
   );
 
-  if (loadingCourses || loadingUsers || loadingReviews || loadingQuestions || loadingBatches || loadingMigrations) {
-    return <Loader label="Loading command center..." />;
+  const roleChartData = useMemo(() => {
+    const rc = analytics?.roleCounts || {};
+    return {
+      labels: ["Admins", "Instructors", "Learners", "Parents"],
+      values: [rc.admin || 0, rc.instructor || 0, rc.learner || 0, rc.parent || 0],
+    };
+  }, [analytics]);
+
+  const enrollmentTrend = useMemo(() => {
+    const trend = analytics?.enrollmentTrend || [];
+    return {
+      labels: trend.map((t) => t.date?.slice(5) || ""),
+      values: trend.map((t) => t.count || 0),
+    };
+  }, [analytics]);
+
+  const isLoading = loadingCourses || loadingUsers || loadingReviews || loadingQuestions || loadingBatches || loadingMigrations;
+
+  if (isLoading && loadingAnalytics) {
+    return <Loader variant="skeleton" label="Loading command center..." />;
   }
+
+  const coursesArr = Array.isArray(courses) ? courses : [];
+  const migrationsArr = Array.isArray(migrations) ? migrations : [];
 
   return (
     <div className="space-y-6">
@@ -57,43 +82,57 @@ const AdminDashboardPage = () => {
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Courses" value={stats.courses} helper="Published and draft courses" />
-        <StatCard label="Active Batches" value={stats.activeBatches} helper="Learner groups currently running" />
-        <StatCard label="Learners" value={stats.learners} helper={`${stats.parents} linked parent accounts`} />
-        <StatCard label="Pending Migrations" value={stats.pendingMigrations} helper="Awaiting admin approval" />
+        <StatCard label="Courses" value={stats.courses} helper="Published and draft courses" icon="📚" accentColor="teal" />
+        <StatCard label="Active Batches" value={stats.activeBatches} helper="Learner groups currently running" icon="👥" accentColor="indigo" />
+        <StatCard label="Learners" value={stats.learners} helper={`${stats.parents} linked parent accounts`} icon="🎓" accentColor="amber" />
+        <StatCard label="Pending Migrations" value={stats.pendingMigrations} helper="Awaiting admin approval" icon="🔄" accentColor="rose" trend={stats.pendingMigrations > 3 ? "up" : "neutral"} />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr,1fr]">
-        <section className="rounded-[28px] bg-white p-6 shadow-panel">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-display text-2xl">Batch Distribution</h3>
-            <Link to="/admin/batches" className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">
-              Manage Batches
-            </Link>
-          </div>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {groupCounts.map((item) => (
-              <div key={item.group} className="rounded-3xl bg-slate-50 p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">{item.group}</p>
-                <p className="mt-2 font-display text-3xl text-slate-900">{item.count}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      {analytics?.totalRevenue > 0 ? (
+        <div className="grid gap-5 md:grid-cols-2">
+          <StatCard label="Revenue" value={`$${analytics.totalRevenue.toLocaleString()}`} helper={`${analytics.paidEnrollments} paid enrollments`} icon="💰" accentColor="teal" />
+          <StatCard label="Avg Test Score" value={`${analytics?.summary?.avgScore || 0}%`} helper={`${analytics?.summary?.totalAttempts || 0} total attempts`} icon="📊" accentColor="amber" />
+        </div>
+      ) : null}
 
-        <section className="rounded-[28px] bg-white p-6 shadow-panel">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-display text-2xl">Approval Queue</h3>
-            <Link to="/admin/migrations" className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
-              Review Requests
-            </Link>
-          </div>
-          <div className="mt-5 space-y-4">
-            {migrations.filter((item) => item.status === "pending").slice(0, 4).map((request) => (
-              <div key={request._id} className="rounded-3xl border border-slate-100 p-4">
+      <div className="grid gap-6 xl:grid-cols-2">
+        <ChartCard title="User Role Distribution" subtitle="Breakdown of registered users by role">
+          <DoughnutChart
+            labels={roleChartData.labels}
+            data={roleChartData.values}
+            centerLabel={`${analytics?.summary?.totalUsers || users?.length || 0}`}
+            height={260}
+          />
+        </ChartCard>
+
+        <ChartCard title="Enrollment Trend" subtitle="New enrollments over the last 30 days">
+          <LineChart
+            labels={enrollmentTrend.labels}
+            datasets={[{ label: "Enrollments", data: enrollmentTrend.values }]}
+            height={260}
+          />
+        </ChartCard>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <ChartCard title="Batch Distribution" subtitle="Active batches by performance group">
+          <BarChart
+            labels={groupCounts.map((item) => item.group.charAt(0).toUpperCase() + item.group.slice(1))}
+            datasets={[{ label: "Batches", data: groupCounts.map((item) => item.count) }]}
+            height={220}
+          />
+          <Link to="/admin/batches" className="mt-4 inline-block rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white">
+            Manage Batches
+          </Link>
+        </ChartCard>
+
+        <ChartCard title="Approval Queue" subtitle="Recent pending migration requests">
+          <div className="space-y-4">
+            {migrationsArr.filter((item) => item.status === "pending").slice(0, 4).map((request) => (
+              <div key={request._id} className="rounded-3xl border border-slate-100 p-4 transition hover:bg-slate-50">
                 <p className="font-semibold text-slate-900">{request.learner?.name}</p>
                 <p className="mt-1 text-sm text-slate-500">
-                  {request.fromBatch?.name} to {request.toBatch?.name}
+                  {request.fromBatch?.name} → {request.toBatch?.name}
                 </p>
                 <p className="mt-2 text-xs uppercase tracking-[0.2em] text-slate-400">
                   {formatDate(request.createdAt)}
@@ -102,15 +141,17 @@ const AdminDashboardPage = () => {
             ))}
             {!stats.pendingMigrations ? <p className="text-sm text-slate-500">No pending migration requests.</p> : null}
           </div>
-        </section>
+          <Link to="/admin/migrations" className="mt-4 inline-block rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
+            Review Requests
+          </Link>
+        </ChartCard>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
-        <section className="rounded-[28px] bg-white p-6 shadow-panel">
-          <h3 className="font-display text-2xl">Recent Courses</h3>
-          <div className="mt-4 space-y-4">
-            {courses.slice(0, 5).map((course) => (
-              <div key={course._id} className="flex items-center justify-between rounded-2xl border border-slate-100 p-4">
+        <ChartCard title="Recent Courses">
+          <div className="space-y-4">
+            {coursesArr.slice(0, 5).map((course) => (
+              <div key={course._id} className="flex items-center justify-between rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50">
                 <div>
                   <p className="font-semibold">{course.title}</p>
                   <p className="text-sm text-slate-500">{course.instructorDisplayName || course.instructor?.name || "Unassigned"}</p>
@@ -121,17 +162,31 @@ const AdminDashboardPage = () => {
               </div>
             ))}
           </div>
-        </section>
+        </ChartCard>
 
-        <section className="rounded-[28px] bg-white p-6 shadow-panel">
-          <h3 className="font-display text-2xl">Quick Pulse</h3>
-          <div className="mt-4 space-y-4 text-sm text-slate-600">
-            <p>{stats.instructors} instructors are available for batch mentoring.</p>
-            <p>{stats.unansweredQuestions} unanswered Q&A entries need attention.</p>
-            <p>{courses.filter((item) => item.status === "draft").length} courses are still in draft.</p>
-            <p>{stats.lowReviews} low-rating reviews may need follow-up.</p>
+        <ChartCard title="Quick Pulse">
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-teal-50 p-4">
+              <p className="text-sm font-medium text-teal-800">👨‍🏫 {stats.instructors} instructors available for batch mentoring</p>
+            </div>
+            <div className="rounded-2xl bg-amber-50 p-4">
+              <p className="text-sm font-medium text-amber-800">❓ {stats.unansweredQuestions} unanswered Q&A entries need attention</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="text-sm font-medium text-slate-700">📝 {coursesArr.filter((item) => item.status === "draft").length} courses still in draft</p>
+            </div>
+            {stats.lowReviews > 0 ? (
+              <div className="rounded-2xl bg-rose-50 p-4">
+                <p className="text-sm font-medium text-rose-800">⚠ {stats.lowReviews} low-rating reviews may need follow-up</p>
+              </div>
+            ) : null}
+            {analytics?.doubtStats ? (
+              <div className="rounded-2xl bg-indigo-50 p-4">
+                <p className="text-sm font-medium text-indigo-800">💬 {analytics.doubtStats.pending} pending doubts out of {analytics.doubtStats.total}</p>
+              </div>
+            ) : null}
           </div>
-        </section>
+        </ChartCard>
       </div>
     </div>
   );

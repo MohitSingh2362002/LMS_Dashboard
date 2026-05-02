@@ -12,6 +12,7 @@ import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminLiveClassesPage from "./pages/admin/AdminLiveClassesPage";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
+import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
 import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
@@ -74,6 +75,7 @@ function App() {
         }
       >
         <Route index element={<AdminDashboardPage />} />
+        <Route path="analytics" element={<AdminAnalyticsPage />} />
         <Route path="batches" element={<AdminBatchesPage />} />
         <Route path="migrations" element={<AdminMigrationRequestsPage />} />
         <Route path="exam/questions" element={<QuestionBankPage />} />

@@ -1,6 +1,7 @@
 export const navigationByRole = {
   admin: [
     { label: "Overview", to: "/admin" },
+    { label: "Analytics", to: "/admin/analytics" },
     { label: "Courses", to: "/admin/courses" },
     { label: "Batches", to: "/admin/batches" },
     { label: "Migration Requests", to: "/admin/migrations" },

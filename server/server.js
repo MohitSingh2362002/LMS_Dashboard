@@ -26,6 +26,7 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import securityRoutes from "./routes/securityRoutes.js";
+import analyticsRoutes from "./routes/analyticsRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -84,6 +85,7 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/security", securityRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-user", ({ userId }) => {
