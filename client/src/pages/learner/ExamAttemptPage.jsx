@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/client";
 import Loader from "../../components/Loader";
+import ProtectedContentFrame from "../../components/ProtectedContentFrame";
 import useFetch from "../../hooks/useFetch";
 
 const ExamAttemptPage = () => {
@@ -48,7 +49,8 @@ const ExamAttemptPage = () => {
   if (loading) return <Loader label="Loading test..." />;
 
   return (
-    <div className="space-y-6">
+    <ProtectedContentFrame resource={`mock-test:${test._id}`}>
+      <div className="space-y-6">
       <div className="sticky top-24 z-20 rounded-[28px] bg-white p-5 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -90,7 +92,8 @@ const ExamAttemptPage = () => {
           </section>
         ))}
       </div>
-    </div>
+      </div>
+    </ProtectedContentFrame>
   );
 };
 

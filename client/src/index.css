@@ -22,3 +22,44 @@ body {
   content: attr(data-placeholder);
   @apply text-slate-400;
 }
+
+.protected-content {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.protected-content::before {
+  content: attr(data-watermark);
+  position: absolute;
+  inset: -20%;
+  z-index: 30;
+  pointer-events: none;
+  display: block;
+  transform: rotate(-28deg);
+  color: rgba(15, 23, 42, 0.075);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 4rem;
+  white-space: pre;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 72px,
+    rgba(15, 23, 42, 0.035) 73px
+  );
+}
+
+.protected-content::after {
+  content: attr(data-watermark) "  " attr(data-watermark) "  " attr(data-watermark);
+  position: absolute;
+  inset: 0;
+  z-index: 31;
+  pointer-events: none;
+  color: rgba(15, 23, 42, 0.06);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 8rem;
+  transform: rotate(-22deg) scale(1.4);
+  transform-origin: center;
+}

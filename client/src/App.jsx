@@ -19,6 +19,7 @@ import AttendanceMarkPage from "./pages/shared/AttendanceMarkPage";
 import AttendanceViewPage from "./pages/shared/AttendanceViewPage";
 import NotificationsPage from "./pages/shared/NotificationsPage";
 import ParentTeacherChatPage from "./pages/shared/ParentTeacherChatPage";
+import SecurityAuditPage from "./pages/shared/SecurityAuditPage";
 import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
 import InstructorBatchesPage from "./pages/instructor/InstructorBatchesPage";
 import InstructorMigrationRequestsPage from "./pages/instructor/InstructorMigrationRequestsPage";
@@ -82,6 +83,7 @@ function App() {
         <Route path="doubts" element={<DoubtVaultManagePage />} />
         <Route path="attendance" element={<AttendanceMarkPage />} />
         <Route path="chat" element={<ParentTeacherChatPage />} />
+        <Route path="security" element={<SecurityAuditPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses" element={<AdminCoursesPage />} />
         <Route path="users" element={<AdminUsersPage />} />
@@ -108,6 +110,7 @@ function App() {
         <Route path="doubts" element={<DoubtVaultManagePage />} />
         <Route path="attendance" element={<AttendanceMarkPage />} />
         <Route path="chat" element={<ParentTeacherChatPage />} />
+        <Route path="security" element={<SecurityAuditPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />

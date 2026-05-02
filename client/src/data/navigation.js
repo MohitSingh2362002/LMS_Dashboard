@@ -10,6 +10,7 @@ export const navigationByRole = {
     { label: "Doubt Vault", to: "/admin/doubts" },
     { label: "Attendance", to: "/admin/attendance" },
     { label: "Parent Chat", to: "/admin/chat" },
+    { label: "Security Audit", to: "/admin/security" },
     { label: "Notifications", to: "/admin/notifications" },
     { label: "Users", to: "/admin/users" },
     { label: "Live Classes", to: "/admin/live-classes" },
@@ -25,6 +26,7 @@ export const navigationByRole = {
     { label: "Doubt Vault", to: "/instructor/doubts" },
     { label: "Attendance", to: "/instructor/attendance" },
     { label: "Parent Chat", to: "/instructor/chat" },
+    { label: "Security Audit", to: "/instructor/security" },
     { label: "Notifications", to: "/instructor/notifications" },
     { label: "Live Tests & Notes", to: "/instructor/resources" },
     { label: "Live Classes", to: "/instructor/live-classes" }

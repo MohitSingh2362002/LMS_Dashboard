@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import api from "../../api/client";
 import useFetch from "../../hooks/useFetch";
 import Loader from "../../components/Loader";
+import ProtectedContentFrame from "../../components/ProtectedContentFrame";
 import {
   formatDate,
   formatFileSize,
@@ -48,8 +49,23 @@ const CourseViewerPage = () => {
     }
   };
 
+  const logDownload = async (noteFile) => {
+    try {
+      await api.post("/security/content-logs", {
+        course: enrollment.course?._id,
+        enrollment: enrollment._id,
+        action: "download",
+        resource: noteFile.path,
+        metadata: { name: noteFile.name }
+      });
+    } catch {
+      // Do not block note access if logging fails.
+    }
+  };
+
   return (
-    <div className="grid gap-6 xl:grid-cols-[320px,1fr]">
+    <ProtectedContentFrame course={enrollment.course?._id} enrollment={enrollment._id} resource={activePage?.title || "course-page"}>
+      <div className="grid gap-6 xl:grid-cols-[320px,1fr]">
       <aside className="rounded-[28px] bg-white p-5 shadow-panel">
         <button className="mb-4 rounded-2xl border px-4 py-3 text-sm" onClick={() => navigate("/learner")}>
           Back to My Courses
@@ -232,10 +248,10 @@ const CourseViewerPage = () => {
                       href={getFullFileUrl(noteFile.path)}
                       target="_blank"
                       rel="noreferrer"
-                      download={noteFile.name}
+                      onClick={() => logDownload(noteFile)}
                       className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white"
                     >
-                      Download PDF
+                      Open Protected PDF
                     </a>
                   </div>
                 ))}
@@ -271,7 +287,8 @@ const CourseViewerPage = () => {
           </article>
         </section>
       </div>
-    </div>
+      </div>
+    </ProtectedContentFrame>
   );
 };
 
