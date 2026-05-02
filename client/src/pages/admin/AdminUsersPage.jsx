@@ -8,23 +8,34 @@ import { formatDate } from "../../utils/helpers";
 
 const AdminUsersPage = () => {
   const [roleFilter, setRoleFilter] = useState("");
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "instructor" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "instructor", linkedLearners: [] });
   const { data: users, loading, refresh } = useFetch(
     () => api.get(roleFilter ? `/users?role=${roleFilter}` : "/users"),
     [roleFilter]
   );
+  const { data: learnerOptions, loading: loadingLearners } = useFetch(() => api.get("/users?role=learner"), []);
 
   const instructorCount = useMemo(() => users.filter((user) => user.role === "instructor").length, [users]);
 
-  const createInstructor = async (event) => {
+  const toggleLinkedLearner = (learnerId) => {
+    const exists = form.linkedLearners.includes(learnerId);
+    setForm({
+      ...form,
+      linkedLearners: exists
+        ? form.linkedLearners.filter((id) => id !== learnerId)
+        : [...form.linkedLearners, learnerId]
+    });
+  };
+
+  const createUser = async (event) => {
     event.preventDefault();
     try {
       await api.post("/users", form);
-      toast.success("Instructor created");
-      setForm({ name: "", email: "", password: "", role: "instructor" });
+      toast.success("User created");
+      setForm({ name: "", email: "", password: "", role: "instructor", linkedLearners: [] });
       refresh();
     } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to create instructor");
+      toast.error(error.response?.data?.message || "Unable to create user");
     }
   };
 
@@ -39,21 +50,42 @@ const AdminUsersPage = () => {
     }
   };
 
-  if (loading) return <Loader label="Loading users..." />;
+  if (loading || loadingLearners) return <Loader label="Loading users..." />;
 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 xl:grid-cols-[0.7fr,1.3fr]">
-        <form onSubmit={createInstructor} className="rounded-[28px] bg-white p-6 shadow-panel">
-          <h2 className="font-display text-2xl">Create Instructor</h2>
-          <p className="mt-2 text-sm text-slate-500">Admins can add instructor accounts directly.</p>
+        <form onSubmit={createUser} className="rounded-[28px] bg-white p-6 shadow-panel">
+          <h2 className="font-display text-2xl">Create Account</h2>
+          <p className="mt-2 text-sm text-slate-500">Admins can add instructors, learners, and linked parent accounts.</p>
           <div className="mt-5 space-y-4">
             <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" placeholder="Full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" placeholder="Temporary password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            <select className="w-full rounded-2xl border border-slate-200 px-4 py-3 capitalize" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value, linkedLearners: [] })}>
+              <option value="instructor">Instructor</option>
+              <option value="learner">Learner</option>
+              <option value="parent">Parent</option>
+            </select>
           </div>
+          {form.role === "parent" ? (
+            <div className="mt-5 max-h-52 space-y-2 overflow-y-auto rounded-3xl border border-slate-100 p-3">
+              <p className="px-3 text-xs uppercase tracking-[0.2em] text-slate-400">Link learners</p>
+              {learnerOptions.map((learner) => (
+                <label key={learner._id} className="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm hover:bg-slate-50">
+                  <input
+                    type="checkbox"
+                    checked={form.linkedLearners.includes(learner._id)}
+                    onChange={() => toggleLinkedLearner(learner._id)}
+                  />
+                  <span>{learner.name}</span>
+                </label>
+              ))}
+              {!learnerOptions.length ? <p className="px-3 text-sm text-slate-500">Create learners first, then link them here.</p> : null}
+            </div>
+          ) : null}
           <button className="mt-5 w-full rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
-            Create Instructor
+            Create Account
           </button>
           <p className="mt-4 text-sm text-slate-500">{instructorCount} instructors currently visible in the filtered list.</p>
         </form>
@@ -68,6 +100,7 @@ const AdminUsersPage = () => {
               <option value="">All roles</option>
               <option value="learner">Learners</option>
               <option value="instructor">Instructors</option>
+              <option value="parent">Parents</option>
             </select>
           </div>
 
@@ -83,6 +116,7 @@ const AdminUsersPage = () => {
                     <th className="pb-3">Name</th>
                     <th className="pb-3">Email</th>
                     <th className="pb-3">Role</th>
+                    <th className="pb-3">Linked Learners</th>
                     <th className="pb-3">Joined</th>
                     <th className="pb-3">Action</th>
                   </tr>
@@ -93,6 +127,11 @@ const AdminUsersPage = () => {
                       <td className="py-4 font-medium">{user.name}</td>
                       <td className="py-4 text-slate-500">{user.email}</td>
                       <td className="py-4 capitalize">{user.role}</td>
+                      <td className="py-4 text-slate-500">
+                        {user.role === "parent"
+                          ? user.linkedLearners?.map((learner) => learner.name).join(", ") || "None"
+                          : "-"}
+                      </td>
                       <td className="py-4 text-slate-500">{formatDate(user.createdAt)}</td>
                       <td className="py-4">
                         <button className="rounded-xl border border-rose-200 px-3 py-2 text-rose-600" onClick={() => deactivateUser(user._id)}>

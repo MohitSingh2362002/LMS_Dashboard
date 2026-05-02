@@ -7,6 +7,7 @@ const sanitizeUser = (user) => ({
   name: user.name,
   email: user.email,
   role: user.role,
+  linkedLearners: user.linkedLearners || [],
   avatar: user.avatar,
   createdAt: user.createdAt
 });

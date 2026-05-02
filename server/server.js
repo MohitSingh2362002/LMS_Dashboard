@@ -18,6 +18,9 @@ import enrollmentRoutes from "./routes/enrollmentRoutes.js";
 import liveClassRoutes from "./routes/liveClassRoutes.js";
 import questionRoutes from "./routes/questionRoutes.js";
 import reviewRoutes from "./routes/reviewRoutes.js";
+import batchRoutes from "./routes/batchRoutes.js";
+import parentRoutes from "./routes/parentRoutes.js";
+import examRoutes from "./routes/examRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -68,6 +71,9 @@ app.use("/api/enrollments", enrollmentRoutes);
 app.use("/api/live-classes", liveClassRoutes);
 app.use("/api/questions", questionRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/batches", batchRoutes);
+app.use("/api/parent", parentRoutes);
+app.use("/api/exam", examRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-room", ({ roomId }) => {

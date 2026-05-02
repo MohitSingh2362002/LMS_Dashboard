@@ -1,24 +1,38 @@
 import User from "../models/User.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
+const sanitizeUser = (user) => ({
+  _id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  avatar: user.avatar,
+  linkedLearners: user.linkedLearners || [],
+  isActive: user.isActive,
+  createdAt: user.createdAt
+});
+
 export const getUsers = asyncHandler(async (req, res) => {
   const filter = {};
   if (req.query.role) {
     filter.role = req.query.role;
   } else {
-    filter.role = { $in: ["learner", "instructor"] };
+    filter.role = { $in: ["learner", "instructor", "parent"] };
   }
 
-  const users = await User.find(filter).select("-password").sort({ createdAt: -1 });
+  const users = await User.find(filter)
+    .select("-password")
+    .populate("linkedLearners", "name email avatar")
+    .sort({ createdAt: -1 });
   res.json(users);
 });
 
 export const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, linkedLearners = [] } = req.body;
 
-  if (role !== "instructor") {
+  if (!["instructor", "learner", "parent"].includes(role)) {
     res.status(400);
-    throw new Error("Admin can only create instructor accounts here");
+    throw new Error("Admin can only create instructor, learner, or parent accounts here");
   }
 
   const existing = await User.findOne({ email: email?.toLowerCase() });
@@ -27,15 +41,67 @@ export const createUser = asyncHandler(async (req, res) => {
     throw new Error("User already exists");
   }
 
-  const user = await User.create({ name, email, password, role });
-  res.status(201).json({
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    avatar: user.avatar,
-    createdAt: user.createdAt
+  if (role === "parent" && linkedLearners.length) {
+    const learnerCount = await User.countDocuments({
+      _id: { $in: linkedLearners },
+      role: "learner",
+      isActive: true
+    });
+
+    if (learnerCount !== linkedLearners.length) {
+      res.status(400);
+      throw new Error("One or more linked learner accounts are invalid");
+    }
+  }
+
+  const user = await User.create({
+    name,
+    email,
+    password,
+    role,
+    linkedLearners: role === "parent" ? linkedLearners : []
   });
+
+  const populated = await User.findById(user._id)
+    .select("-password")
+    .populate("linkedLearners", "name email avatar");
+
+  res.status(201).json(sanitizeUser(populated));
+});
+
+export const updateUserLinks = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (user.role !== "parent") {
+    res.status(400);
+    throw new Error("Only parent accounts can be linked to learners");
+  }
+
+  const linkedLearners = req.body.linkedLearners || [];
+  const learnerCount = await User.countDocuments({
+    _id: { $in: linkedLearners },
+    role: "learner",
+    isActive: true
+  });
+
+  if (learnerCount !== linkedLearners.length) {
+    res.status(400);
+    throw new Error("One or more linked learner accounts are invalid");
+  }
+
+  user.linkedLearners = linkedLearners;
+  await user.save();
+
+  const populated = await User.findById(user._id)
+    .select("-password")
+    .populate("linkedLearners", "name email avatar");
+
+  res.json(sanitizeUser(populated));
 });
 
 export const deleteUser = asyncHandler(async (req, res) => {

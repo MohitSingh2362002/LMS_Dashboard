@@ -40,8 +40,8 @@ const LoginPage = () => {
         <form onSubmit={submit} className="rounded-[32px] bg-white p-8 text-slate-900 shadow-panel">
           <h2 className="font-display text-3xl">Sign in</h2>
           <p className="mt-2 text-sm text-slate-500">Choose your role before logging in.</p>
-          <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-2">
-            {["admin", "instructor", "learner"].map((role) => (
+          <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-4">
+            {["admin", "instructor", "learner", "parent"].map((role) => (
               <button
                 type="button"
                 key={role}

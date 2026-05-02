@@ -8,9 +8,10 @@ const userSchema = new mongoose.Schema(
     password: { type: String, required: true, minlength: 6 },
     role: {
       type: String,
-      enum: ["admin", "instructor", "learner"],
+      enum: ["admin", "instructor", "learner", "parent"],
       default: "learner"
     },
+    linkedLearners: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     avatar: { type: String, default: "" },
     isActive: { type: Boolean, default: true }
   },
