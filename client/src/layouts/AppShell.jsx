@@ -1,13 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { NavLink, Outlet } from "react-router-dom";
+import { io } from "socket.io-client";
 import { useAuth } from "../context/AuthContext";
 import { navigationByRole } from "../data/navigation";
-import { classNames } from "../utils/helpers";
+import { classNames, SOCKET_URL } from "../utils/helpers";
 
 const AppShell = () => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const navItems = navigationByRole[user.role] || [];
+
+  useEffect(() => {
+    if (!user?._id) return undefined;
+
+    const socket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+    socket.emit("join-user", { userId: user._id });
+    socket.on("notification:new", (notification) => {
+      toast(notification.message, { icon: "!" });
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(notification.title, { body: notification.message });
+      }
+    });
+
+    return () => socket.disconnect();
+  }, [user?._id]);
+
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) return;
+    if (Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(13,148,136,0.12),_transparent_32%),linear-gradient(180deg,#f8fafc_0%,#eef6ff_100%)] text-slate-900">
@@ -62,6 +87,12 @@ const AppShell = () => {
                   <p className="text-sm font-semibold">{user.email}</p>
                   <p className="text-xs text-slate-500">Signed in</p>
                 </div>
+                <button
+                  className="hidden rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium sm:block"
+                  onClick={requestNotificationPermission}
+                >
+                  Alerts
+                </button>
                 <div className="flex h-11 w-11 items-center justify-center rounded-full bg-teal-700 text-sm font-bold uppercase text-white">
                   {user.name.slice(0, 2)}
                 </div>

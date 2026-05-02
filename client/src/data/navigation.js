@@ -8,6 +8,8 @@ export const navigationByRole = {
     { label: "Mock Tests", to: "/admin/exam/tests" },
     { label: "Leaderboards", to: "/admin/exam/leaderboards" },
     { label: "Doubt Vault", to: "/admin/doubts" },
+    { label: "Attendance", to: "/admin/attendance" },
+    { label: "Notifications", to: "/admin/notifications" },
     { label: "Users", to: "/admin/users" },
     { label: "Live Classes", to: "/admin/live-classes" },
     { label: "Reviews", to: "/admin/reviews" }
@@ -20,6 +22,8 @@ export const navigationByRole = {
     { label: "Mock Tests", to: "/instructor/exam/tests" },
     { label: "Leaderboards", to: "/instructor/exam/leaderboards" },
     { label: "Doubt Vault", to: "/instructor/doubts" },
+    { label: "Attendance", to: "/instructor/attendance" },
+    { label: "Notifications", to: "/instructor/notifications" },
     { label: "Live Tests & Notes", to: "/instructor/resources" },
     { label: "Live Classes", to: "/instructor/live-classes" }
   ],
@@ -28,13 +32,17 @@ export const navigationByRole = {
     { label: "My Batch", to: "/learner/batches" },
     { label: "Exam Cracker", to: "/learner/exam" },
     { label: "Leaderboards", to: "/learner/exam/leaderboards" },
-    { label: "Doubt Vault", to: "/learner/doubts" }
+    { label: "Doubt Vault", to: "/learner/doubts" },
+    { label: "Attendance", to: "/learner/attendance" },
+    { label: "Notifications", to: "/learner/notifications" }
   ],
   parent: [
     { label: "Trust Center", to: "/parent" },
     { label: "Growth Reports", to: "/parent/reports" },
     { label: "Batches", to: "/parent/batches" },
     { label: "Tests", to: "/parent/exam" },
-    { label: "Leaderboards", to: "/parent/exam/leaderboards" }
+    { label: "Leaderboards", to: "/parent/exam/leaderboards" },
+    { label: "Attendance", to: "/parent/attendance" },
+    { label: "Notifications", to: "/parent/notifications" }
   ]
 };

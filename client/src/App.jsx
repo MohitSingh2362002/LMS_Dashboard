@@ -15,6 +15,9 @@ import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
 import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
+import AttendanceMarkPage from "./pages/shared/AttendanceMarkPage";
+import AttendanceViewPage from "./pages/shared/AttendanceViewPage";
+import NotificationsPage from "./pages/shared/NotificationsPage";
 import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
 import InstructorBatchesPage from "./pages/instructor/InstructorBatchesPage";
 import InstructorMigrationRequestsPage from "./pages/instructor/InstructorMigrationRequestsPage";
@@ -76,6 +79,8 @@ function App() {
         <Route path="exam/leaderboards" element={<ExamLeaderboardsPage basePath="/admin/exam" />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="doubts" element={<DoubtVaultManagePage />} />
+        <Route path="attendance" element={<AttendanceMarkPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses" element={<AdminCoursesPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="live-classes" element={<AdminLiveClassesPage />} />
@@ -99,6 +104,8 @@ function App() {
         <Route path="exam/leaderboards" element={<ExamLeaderboardsPage basePath="/instructor/exam" />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="doubts" element={<DoubtVaultManagePage />} />
+        <Route path="attendance" element={<AttendanceMarkPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />
         <Route path="questions" element={<InstructorQuestionsPage />} />
@@ -120,6 +127,8 @@ function App() {
         <Route path="exam/results/:attemptId" element={<ExamResultPage />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="doubts" element={<LearnerDoubtVaultPage />} />
+        <Route path="attendance" element={<AttendanceViewPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses/:enrollmentId" element={<CourseViewerPage />} />
       </Route>
 
@@ -137,6 +146,8 @@ function App() {
         <Route path="exam" element={<ParentExamPage />} />
         <Route path="exam/leaderboards" element={<ParentLeaderboardsPage />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
+        <Route path="attendance" element={<AttendanceViewPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
