@@ -18,6 +18,7 @@ import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
 import AttendanceMarkPage from "./pages/shared/AttendanceMarkPage";
 import AttendanceViewPage from "./pages/shared/AttendanceViewPage";
 import NotificationsPage from "./pages/shared/NotificationsPage";
+import ParentTeacherChatPage from "./pages/shared/ParentTeacherChatPage";
 import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
 import InstructorBatchesPage from "./pages/instructor/InstructorBatchesPage";
 import InstructorMigrationRequestsPage from "./pages/instructor/InstructorMigrationRequestsPage";
@@ -80,6 +81,7 @@ function App() {
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="doubts" element={<DoubtVaultManagePage />} />
         <Route path="attendance" element={<AttendanceMarkPage />} />
+        <Route path="chat" element={<ParentTeacherChatPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses" element={<AdminCoursesPage />} />
         <Route path="users" element={<AdminUsersPage />} />
@@ -105,6 +107,7 @@ function App() {
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="doubts" element={<DoubtVaultManagePage />} />
         <Route path="attendance" element={<AttendanceMarkPage />} />
+        <Route path="chat" element={<ParentTeacherChatPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />
@@ -147,6 +150,7 @@ function App() {
         <Route path="exam/leaderboards" element={<ParentLeaderboardsPage />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="attendance" element={<AttendanceViewPage />} />
+        <Route path="chat" element={<ParentTeacherChatPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
       </Route>
 

@@ -9,6 +9,7 @@ export const navigationByRole = {
     { label: "Leaderboards", to: "/admin/exam/leaderboards" },
     { label: "Doubt Vault", to: "/admin/doubts" },
     { label: "Attendance", to: "/admin/attendance" },
+    { label: "Parent Chat", to: "/admin/chat" },
     { label: "Notifications", to: "/admin/notifications" },
     { label: "Users", to: "/admin/users" },
     { label: "Live Classes", to: "/admin/live-classes" },
@@ -23,6 +24,7 @@ export const navigationByRole = {
     { label: "Leaderboards", to: "/instructor/exam/leaderboards" },
     { label: "Doubt Vault", to: "/instructor/doubts" },
     { label: "Attendance", to: "/instructor/attendance" },
+    { label: "Parent Chat", to: "/instructor/chat" },
     { label: "Notifications", to: "/instructor/notifications" },
     { label: "Live Tests & Notes", to: "/instructor/resources" },
     { label: "Live Classes", to: "/instructor/live-classes" }
@@ -43,6 +45,7 @@ export const navigationByRole = {
     { label: "Tests", to: "/parent/exam" },
     { label: "Leaderboards", to: "/parent/exam/leaderboards" },
     { label: "Attendance", to: "/parent/attendance" },
+    { label: "Teacher Chat", to: "/parent/chat" },
     { label: "Notifications", to: "/parent/notifications" }
   ]
 };
