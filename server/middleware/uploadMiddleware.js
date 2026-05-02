@@ -34,9 +34,11 @@ const createUpload = (predicate, errorMessage) =>
   });
 
 const isImage = (file) => file.mimetype.startsWith("image/");
+const isAudio = (file) => file.mimetype.startsWith("audio/");
 const isPdf = (file) =>
   file.mimetype === "application/pdf" || path.extname(file.originalname).toLowerCase() === ".pdf";
 
 export const upload = createUpload(isImage, "Only image uploads are allowed");
+export const uploadAudio = createUpload(isAudio, "Only audio uploads are allowed");
 export const uploadPdfFiles = createUpload(isPdf, "Only PDF uploads are allowed");
 export { uploadDir };

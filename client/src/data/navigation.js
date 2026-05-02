@@ -7,9 +7,9 @@ export const navigationByRole = {
     { label: "Question Bank", to: "/admin/exam/questions" },
     { label: "Mock Tests", to: "/admin/exam/tests" },
     { label: "Leaderboards", to: "/admin/exam/leaderboards" },
+    { label: "Doubt Vault", to: "/admin/doubts" },
     { label: "Users", to: "/admin/users" },
     { label: "Live Classes", to: "/admin/live-classes" },
-    { label: "Q&A", to: "/admin/questions" },
     { label: "Reviews", to: "/admin/reviews" }
   ],
   instructor: [
@@ -19,18 +19,20 @@ export const navigationByRole = {
     { label: "Question Bank", to: "/instructor/exam/questions" },
     { label: "Mock Tests", to: "/instructor/exam/tests" },
     { label: "Leaderboards", to: "/instructor/exam/leaderboards" },
+    { label: "Doubt Vault", to: "/instructor/doubts" },
     { label: "Live Tests & Notes", to: "/instructor/resources" },
-    { label: "Live Classes", to: "/instructor/live-classes" },
-    { label: "Q&A", to: "/instructor/questions" }
+    { label: "Live Classes", to: "/instructor/live-classes" }
   ],
   learner: [
     { label: "My Courses", to: "/learner" },
     { label: "My Batch", to: "/learner/batches" },
     { label: "Exam Cracker", to: "/learner/exam" },
-    { label: "Leaderboards", to: "/learner/exam/leaderboards" }
+    { label: "Leaderboards", to: "/learner/exam/leaderboards" },
+    { label: "Doubt Vault", to: "/learner/doubts" }
   ],
   parent: [
     { label: "Trust Center", to: "/parent" },
+    { label: "Growth Reports", to: "/parent/reports" },
     { label: "Batches", to: "/parent/batches" },
     { label: "Tests", to: "/parent/exam" },
     { label: "Leaderboards", to: "/parent/exam/leaderboards" }

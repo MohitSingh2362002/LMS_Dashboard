@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import api from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import Loader from "../../components/Loader";
@@ -39,7 +40,18 @@ const ParentDashboardPage = () => {
       {!learners.length ? (
         <EmptyState title="No learner linked yet" description="Ask the admin to link this parent account with a learner." />
       ) : (
-        <div>
+        <div className="space-y-6">
+          <section className="rounded-[28px] bg-white p-6 shadow-panel">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h3 className="font-display text-2xl text-slate-900">Growth Reports</h3>
+                <p className="mt-2 text-sm text-slate-500">Open visual score trends, rank snapshots, and weak-topic analysis.</p>
+              </div>
+              <Link to="/parent/reports" className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
+                View Reports
+              </Link>
+            </div>
+          </section>
           <section className="rounded-[28px] bg-white p-6 shadow-panel">
             <h3 className="font-display text-2xl text-slate-900">Performance Snapshot</h3>
             <div className="mt-5 grid gap-4 md:grid-cols-2">

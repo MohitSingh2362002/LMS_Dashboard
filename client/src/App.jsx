@@ -14,6 +14,7 @@ import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
+import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
 import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
 import InstructorBatchesPage from "./pages/instructor/InstructorBatchesPage";
 import InstructorMigrationRequestsPage from "./pages/instructor/InstructorMigrationRequestsPage";
@@ -28,7 +29,9 @@ import ExamLeaderboardsPage from "./pages/learner/ExamLeaderboardsPage";
 import ExamAttemptPage from "./pages/learner/ExamAttemptPage";
 import ExamResultPage from "./pages/learner/ExamResultPage";
 import ExamLeaderboardPage from "./pages/learner/ExamLeaderboardPage";
+import LearnerDoubtVaultPage from "./pages/learner/LearnerDoubtVaultPage";
 import ParentDashboardPage from "./pages/parent/ParentDashboardPage";
+import ParentReportsPage from "./pages/parent/ParentReportsPage";
 import ParentBatchesPage from "./pages/parent/ParentBatchesPage";
 import ParentExamPage from "./pages/parent/ParentExamPage";
 import ParentLeaderboardsPage from "./pages/parent/ParentLeaderboardsPage";
@@ -72,6 +75,7 @@ function App() {
         <Route path="exam/tests" element={<MockTestsPage />} />
         <Route path="exam/leaderboards" element={<ExamLeaderboardsPage basePath="/admin/exam" />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
+        <Route path="doubts" element={<DoubtVaultManagePage />} />
         <Route path="courses" element={<AdminCoursesPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="live-classes" element={<AdminLiveClassesPage />} />
@@ -94,6 +98,7 @@ function App() {
         <Route path="exam/tests" element={<MockTestsPage />} />
         <Route path="exam/leaderboards" element={<ExamLeaderboardsPage basePath="/instructor/exam" />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
+        <Route path="doubts" element={<DoubtVaultManagePage />} />
         <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />
         <Route path="questions" element={<InstructorQuestionsPage />} />
@@ -114,6 +119,7 @@ function App() {
         <Route path="exam/tests/:testId" element={<ExamAttemptPage />} />
         <Route path="exam/results/:attemptId" element={<ExamResultPage />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
+        <Route path="doubts" element={<LearnerDoubtVaultPage />} />
         <Route path="courses/:enrollmentId" element={<CourseViewerPage />} />
       </Route>
 
@@ -126,6 +132,7 @@ function App() {
         }
       >
         <Route index element={<ParentDashboardPage />} />
+        <Route path="reports" element={<ParentReportsPage />} />
         <Route path="batches" element={<ParentBatchesPage />} />
         <Route path="exam" element={<ParentExamPage />} />
         <Route path="exam/leaderboards" element={<ParentLeaderboardsPage />} />

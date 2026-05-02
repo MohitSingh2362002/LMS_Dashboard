@@ -21,6 +21,7 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import batchRoutes from "./routes/batchRoutes.js";
 import parentRoutes from "./routes/parentRoutes.js";
 import examRoutes from "./routes/examRoutes.js";
+import doubtRoutes from "./routes/doubtRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -74,6 +75,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/batches", batchRoutes);
 app.use("/api/parent", parentRoutes);
 app.use("/api/exam", examRoutes);
+app.use("/api/doubts", doubtRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-room", ({ roomId }) => {
