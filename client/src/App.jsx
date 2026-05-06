@@ -12,6 +12,7 @@ import AdminUsersPage from "./pages/admin/AdminUsersPage";
 import AdminLiveClassesPage from "./pages/admin/AdminLiveClassesPage";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
+import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
@@ -96,6 +97,7 @@ function App() {
         <Route path="live-classes" element={<AdminLiveClassesPage />} />
         <Route path="questions" element={<AdminQuestionsPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
+        <Route path="announcements" element={<AdminAnnouncementsPage />} />
       </Route>
 
       <Route

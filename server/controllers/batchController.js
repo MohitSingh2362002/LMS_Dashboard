@@ -114,7 +114,10 @@ export const updateSyllabusProgress = asyncHandler(async (req, res) => {
     throw new Error("Batch not found");
   }
 
-  if (!canManageBatch(req.user, batch)) {
+  // Admin can always update; instructors can update any batch they mentor
+  const mentorId = (batch.mentor?._id ?? batch.mentor)?.toString();
+  const userId   = req.user._id?.toString();
+  if (req.user.role !== "admin" && mentorId !== userId) {
     res.status(403);
     throw new Error("Forbidden — you are not the mentor of this batch");
   }
@@ -128,7 +131,12 @@ export const updateSyllabusProgress = asyncHandler(async (req, res) => {
   batch.syllabusProgress = Math.round(value);
   await batch.save();
 
-  const populated = await populateBatch(Batch.findById(batch._id));
+  // Re-fetch with full population for the response
+  const populated = await Batch.findById(batch._id)
+    .populate("course", "title status")
+    .populate("mentor", "name email avatar")
+    .populate("learners", "name email avatar");
+
   res.json(populated);
 });
 

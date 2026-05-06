@@ -78,6 +78,15 @@ const ParentTeacherChatPage = () => {
 
   const convList = Array.isArray(conversations) ? conversations : [];
 
+  // Teachers who already have a conversation — exclude them from "Start Chat" section
+  const teacherIdsWithConv = new Set(
+    convList.map((c) => String(c.teacher?._id)).filter(Boolean)
+  );
+  // Only show teachers who DON'T have an existing conversation yet
+  const newContacts = contactLinks.filter(
+    (link) => !teacherIdsWithConv.has(String(link.teacher?._id))
+  );
+
   return (
     <div className="flex h-[calc(100vh-104px)] overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card">
       {/* Sidebar */}
@@ -92,19 +101,28 @@ const ParentTeacherChatPage = () => {
           </div>
         </div>
 
-        {/* Contacts (parent only) */}
-        {user.role === "parent" && contactLinks.length > 0 ? (
+        {/* "Start Chat" — only teachers WITHOUT existing conversations */}
+        {user.role === "parent" && newContacts.length > 0 ? (
           <div className="border-b border-slate-100 px-3 py-2">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Assigned Teachers</p>
-            {contactLinks.map((link) => (
-              <button key={`${link.learner._id}-${link.teacher._id}`}
-                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-slate-50"
-                onClick={() => startConversation(link)}>
-                <Avatar name={link.teacher.name} size="h-7 w-7" color="bg-brand-accent" />
-                <div>
-                  <p className="font-semibold text-brand-ink">{link.teacher.name}</p>
-                  <p className="text-slate-500">{link.learner.name}</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              Assigned Teachers
+            </p>
+            {newContacts.map((link) => (
+              <button
+                key={`${link.learner._id}-${link.teacher._id}`}
+                className="flex w-full items-center gap-2.5 rounded-lg px-2 py-2 text-left hover:bg-slate-50 transition"
+                onClick={() => startConversation(link)}
+              >
+                <Avatar name={link.teacher.name} size="h-8 w-8" color="bg-brand-accent" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-brand-ink">{link.teacher.name}</p>
+                  <p className="text-[10px] text-slate-500">{link.learner.name}</p>
                 </div>
+                {/* Start chat hint */}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                  className="h-3.5 w-3.5 shrink-0 text-slate-300">
+                  <path d="M21 15a4 4 0 0 1-4 4H8l-5 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v8z" />
+                </svg>
               </button>
             ))}
           </div>

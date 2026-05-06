@@ -28,7 +28,7 @@ const CourseCard = ({ enrollment }) => {
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover hover:-translate-y-0.5">
       {/* Thumbnail */}
-      <div className="relative h-44">
+      <div className="relative h-52">
         <CourseThumbnail
           title={course?.title}
           thumbnail={course?.thumbnail}
@@ -175,7 +175,7 @@ const LearnerMyCoursesPage = () => {
           description="Switch filter to see other courses."
         />
       ) : (
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {filtered.map((e) => (
             <CourseCard key={e._id} enrollment={e} />
           ))}

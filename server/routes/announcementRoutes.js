@@ -9,7 +9,7 @@ import { authorize, protect } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/",    protect, getAnnouncements);
-router.post("/",   protect, authorize("admin", "instructor"), createAnnouncement);
-router.delete("/:id", protect, authorize("admin", "instructor"), deleteAnnouncement);
+router.post("/",      protect, authorize("admin"), createAnnouncement);
+router.delete("/:id", protect, authorize("admin"), deleteAnnouncement);
 
 export default router;

@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import api from "../../api/client";
 import useFetch from "../../hooks/useFetch";
 import Loader from "../../components/Loader";
@@ -35,102 +34,15 @@ const TYPE_COLOR = {
   info:    { dot: "bg-slate-400",    label: "text-slate-400",    badge: "INFO"    },
 };
 
-/* ── Add Announcement Modal ───────────────────────────────────────── */
-const AddAnnouncementModal = ({ onClose, onSave }) => {
-  const [type, setType]       = useState("general");
-  const [title, setTitle]     = useState("");
-  const [message, setMessage] = useState("");
-  const [saving, setSaving]   = useState(false);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    if (!message.trim()) { toast.error("Message is required"); return; }
-    setSaving(true);
-    try {
-      const { data } = await api.post("/announcements", { type, title, message });
-      onSave(data);
-      toast.success("Announcement posted");
-      onClose();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to post");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <form
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={submit}
-        className="w-full max-w-md rounded-2xl border border-slate-200/70 bg-white p-6 shadow-panel"
-      >
-        <div className="mb-5 flex items-center justify-between">
-          <h3 className="text-base font-bold text-brand-ink">New Announcement</h3>
-          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M18 6L6 18M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        {/* Type selector */}
-        <div className="mb-4 flex gap-2">
-          {["urgent", "general", "info"].map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setType(t)}
-              className={`flex-1 rounded-lg border py-2 text-xs font-bold uppercase tracking-wide transition ${
-                type === t
-                  ? t === "urgent"  ? "border-rose-400 bg-rose-50 text-rose-600"
-                  : t === "general" ? "border-brand-accent bg-brand-surface text-brand-primary"
-                  : "border-slate-300 bg-slate-100 text-slate-600"
-                  : "border-slate-200 text-slate-400 hover:border-slate-300"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div className="space-y-3">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title (optional)"
-            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-brand-ink placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none"
-          />
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            required
-            rows={3}
-            placeholder="Write your announcement…"
-            className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-brand-ink placeholder:text-slate-400 focus:border-brand-primary focus:bg-white focus:outline-none"
-          />
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-            Cancel
-          </button>
-          <button type="submit" disabled={saving} className="flex-1 rounded-xl bg-brand-ink py-2.5 text-sm font-bold text-white hover:brightness-90 disabled:opacity-60">
-            {saving ? "Posting…" : "Post"}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
 
 /* ── Main page ────────────────────────────────────────────────────── */
 const InstructorDashboardPage = () => {
   const { user }   = useAuth();
   const navigate   = useNavigate();
-  const [showAddModal, setShowAddModal] = useState(false);
 
   const { data: courses,       loading: lc } = useFetch(() => api.get("/courses"), []);
   const { data: batches,       loading: lb } = useFetch(() => api.get("/batches"), []);
-  const { data: announcements, loading: la, setData: setAnnouncements } =
+  const { data: announcements, loading: la } =
     useFetch(() => api.get("/announcements"), []);
   const { data: attendance }                 = useFetch(() => api.get("/attendance"), []);
 
@@ -179,27 +91,10 @@ const InstructorDashboardPage = () => {
     return rows.slice(0, 8);
   }, [batchArr, attendanceMap]);
 
-  const deleteAnnouncement = async (id) => {
-    try {
-      await api.delete(`/announcements/${id}`);
-      setAnnouncements((prev) => prev.filter((a) => a._id !== id));
-      toast.success("Announcement removed");
-    } catch {
-      toast.error("Could not delete");
-    }
-  };
-
   if (lc || lb) return <Loader label="Loading dashboard…" />;
 
   return (
     <div className="space-y-6">
-      {showAddModal && (
-        <AddAnnouncementModal
-          onClose={() => setShowAddModal(false)}
-          onSave={(a) => setAnnouncements((prev) => [a, ...prev])}
-        />
-      )}
-
       {/* ── Welcome Hero ── */}
       <div className="relative overflow-hidden rounded-2xl bg-brand-ink p-7 text-white">
         <div className="relative z-10 max-w-lg">
@@ -342,17 +237,13 @@ const InstructorDashboardPage = () => {
           </div>
         </div>
 
-        {/* ── Announcements panel ── */}
+        {/* ── Announcements panel (read-only — admin posts) ── */}
         <div className="flex flex-col rounded-2xl bg-brand-ink text-white shadow-card overflow-hidden">
           <div className="flex items-center justify-between border-b border-white/10 px-6 py-5">
             <h2 className="text-base font-bold">Announcements</h2>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cta text-lg font-bold text-white hover:brightness-110 transition"
-              title="New announcement"
-            >
-              +
-            </button>
+            <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-[10px] font-bold text-white/60 uppercase tracking-wider">
+              Admin posts
+            </span>
           </div>
 
           {la ? (
@@ -365,47 +256,23 @@ const InstructorDashboardPage = () => {
                 <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
               <p className="text-sm text-white/50">No announcements yet.</p>
-              <button onClick={() => setShowAddModal(true)} className="text-xs font-semibold text-brand-cta hover:underline">
-                Post the first one
-              </button>
             </div>
           ) : (
             <div className="flex-1 divide-y divide-white/10 overflow-y-auto">
               {annoArr.slice(0, 5).map((a) => {
                 const tc = TYPE_COLOR[a.type] || TYPE_COLOR.general;
                 return (
-                  <div key={a._id} className="group px-6 py-4 relative">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-[10px] font-bold uppercase tracking-wider ${tc.label}`}>{tc.badge}</p>
-                        {a.title && <p className="mt-0.5 text-sm font-semibold text-white truncate">{a.title}</p>}
-                        <p className="mt-1 text-sm text-white/75 leading-snug">{a.message}</p>
-                        <p className="mt-1.5 text-[10px] text-white/35">{formatDate(a.createdAt)}</p>
-                      </div>
-                      <button
-                        onClick={() => deleteAnnouncement(a._id)}
-                        className="shrink-0 rounded p-1 text-white/20 opacity-0 group-hover:opacity-100 hover:text-rose-400 transition"
-                        title="Delete"
-                      >
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
-                          <path d="M18 6L6 18M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
+                  <div key={a._id} className="px-6 py-4">
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${tc.label}`}>{tc.badge}</p>
+                    {a.title && <p className="mt-0.5 text-sm font-semibold text-white truncate">{a.title}</p>}
+                    <p className="mt-1 text-sm text-white/75 leading-snug">{a.message}</p>
+                    <p className="mt-1.5 text-[10px] text-white/35">{formatDate(a.createdAt)}</p>
                   </div>
                 );
               })}
             </div>
           )}
 
-          <div className="border-t border-white/10 px-6 py-4">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="w-full rounded-xl border border-white/25 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition"
-            >
-              New Announcement
-            </button>
-          </div>
         </div>
       </div>
     </div>

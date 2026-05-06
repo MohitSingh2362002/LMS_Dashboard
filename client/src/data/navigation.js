@@ -14,7 +14,8 @@ export const navigationByRole = {
     { label: "Instructor", to: "/admin/instructor", icon: "instructor" },
     { label: "Parents", to: "/admin/users?role=parent", icon: "parents" },
     { label: "Live Classes", to: "/admin/live-classes", icon: "live" },
-    { label: "Reviews", to: "/admin/reviews", icon: "reviews" }
+    { label: "Reviews", to: "/admin/reviews", icon: "reviews" },
+    { label: "Announcements", to: "/admin/announcements", icon: "bell" }
   ],
   instructor: [
     { label: "Dashboard",    to: "/instructor",                   icon: "dashboard"  },
