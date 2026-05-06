@@ -9,6 +9,7 @@ import {
   getMyAttempts,
   getParentExamSummary,
   getQuestionBank,
+  updateMockTest,
   updateQuestion,
   submitAttempt
 } from "../controllers/examController.js";
@@ -31,6 +32,7 @@ router
 
 router.get("/parent/summary", protect, authorize("parent"), getParentExamSummary);
 router.get("/tests/:id", protect, authorize("admin", "instructor", "learner"), getMockTestForAttempt);
+router.put("/tests/:id", protect, authorize("admin", "instructor"), updateMockTest);
 router.post("/tests/:id/attempts", protect, authorize("learner"), submitAttempt);
 router.get("/tests/:id/leaderboard", protect, authorize("admin", "instructor", "learner", "parent"), getLeaderboard);
 router.get("/attempts/mine", protect, authorize("learner"), getMyAttempts);

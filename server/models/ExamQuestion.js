@@ -22,8 +22,8 @@ const examQuestionSchema = new mongoose.Schema(
     writtenAnswer: { type: String, default: "" },
     explanation: { type: String, default: "" },
     subject: { type: String, required: true, trim: true },
-    chapter: { type: String, required: true, trim: true },
-    topic: { type: String, required: true, trim: true },
+    chapter: { type: String, default: "", trim: true },
+    topic: { type: String, default: "", trim: true },
     difficulty: {
       type: String,
       enum: ["easy", "medium", "hard"],

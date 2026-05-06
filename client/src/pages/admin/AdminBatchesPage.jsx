@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import api from "../../api/client";
 import EmptyState from "../../components/EmptyState";
@@ -18,227 +18,318 @@ const emptyForm = {
 const performanceGroups = ["foundation", "growth", "merit", "ranker"];
 const statuses = ["active", "archived"];
 
+const TRACK_PILL = {
+  foundation: "bg-brand-surface text-brand-primary",
+  growth: "bg-emerald-100 text-emerald-700",
+  merit: "bg-amber-100 text-amber-700",
+  ranker: "bg-violet-100 text-violet-700"
+};
+
+// ── Batch Detail Modal ──────────────────────────────────────────────
+const BatchDetailModal = ({ batch, onClose, onEdit }) => {
+  if (!batch) return null;
+  const trackClass = TRACK_PILL[batch.performanceGroup] || TRACK_PILL.foundation;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg rounded-2xl border border-slate-200/70 bg-white shadow-panel">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-brand-ink">{batch.name}</h3>
+            <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${trackClass}`}>{batch.performanceGroup}</span>
+            <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">{batch.status}</span>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M18 6L6 18M6 6l12 12" /></svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* Meta */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Course</p>
+              <p className="mt-0.5 text-sm font-semibold text-brand-ink">{batch.course?.title || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Mentor</p>
+              <p className="mt-0.5 text-sm font-semibold text-brand-ink">{batch.mentor?.name || "Unassigned"}</p>
+              {batch.mentor?.email ? <p className="text-[11px] text-slate-500">{batch.mentor.email}</p> : null}
+            </div>
+          </div>
+
+          {/* Learners */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                Learners ({batch.learners?.length || 0})
+              </p>
+            </div>
+            {batch.learners?.length ? (
+              <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border border-slate-100 p-1">
+                {batch.learners.map((l, i) => (
+                  <div key={l._id || i} className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-slate-50">
+                    <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-brand-surface text-[10px] font-bold text-brand-primary">
+                      {(l.name || "?").slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-semibold text-brand-ink">{l.name || "—"}</p>
+                      <p className="truncate text-[10px] text-slate-500">{l.email || ""}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400">No learners enrolled yet.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4">
+          <p className="text-[11px] text-slate-400">Updated {formatDate(batch.updatedAt)}</p>
+          <button onClick={() => { onClose(); onEdit(batch); }}
+            className="rounded-lg bg-brand-cta px-4 py-2 text-sm font-semibold text-white hover:brightness-95">
+            Edit Batch
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const AdminBatchesPage = () => {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState("");
+  const [viewingBatch, setViewingBatch] = useState(null);
   const [filters, setFilters] = useState({ status: "active", performanceGroup: "" });
   const [learnerSearch, setLearnerSearch] = useState("");
+
   const query = new URLSearchParams(
-    Object.entries(filters).filter(([, value]) => Boolean(value))
+    Object.entries(filters).filter(([, v]) => Boolean(v))
   ).toString();
 
-  const { data: batches, loading: loadingBatches, refresh } = useFetch(
-    () => api.get(query ? `/batches?${query}` : "/batches"),
-    [query]
-  );
-  const { data: courses, loading: loadingCourses } = useFetch(() => api.get("/courses"), []);
-  const { data: users, loading: loadingUsers } = useFetch(() => api.get("/users"), []);
+  const { data: batches, loading: lb, refresh } = useFetch(() => api.get(query ? `/batches?${query}` : "/batches"), [query]);
+  const { data: courses, loading: lc } = useFetch(() => api.get("/courses"), []);
+  const { data: users, loading: lu } = useFetch(() => api.get("/users"), []);
 
-  const instructors = useMemo(() => users.filter((user) => user.role === "instructor"), [users]);
-  const learners = useMemo(() => users.filter((user) => user.role === "learner"), [users]);
+  const instructors = useMemo(() => users.filter((u) => u.role === "instructor"), [users]);
+  const learners = useMemo(() => users.filter((u) => u.role === "learner"), [users]);
   const filteredLearners = useMemo(
-    () =>
-      learners.filter((learner) =>
-        `${learner.name} ${learner.email}`.toLowerCase().includes(learnerSearch.toLowerCase())
-      ),
+    () => learners.filter((l) => `${l.name} ${l.email}`.toLowerCase().includes(learnerSearch.toLowerCase())),
     [learners, learnerSearch]
   );
 
-  const resetForm = () => {
-    setForm(emptyForm);
-    setEditingId("");
-    setLearnerSearch("");
-  };
+  const resetForm = () => { setForm(emptyForm); setEditingId(""); setLearnerSearch(""); };
 
-  const startEdit = (batch) => {
-    setEditingId(batch._id);
+  const startEdit = (b) => {
+    setEditingId(b._id);
     setForm({
-      name: batch.name || "",
-      course: batch.course?._id || "",
-      mentor: batch.mentor?._id || "",
-      learners: batch.learners?.map((learner) => learner._id) || [],
-      performanceGroup: batch.performanceGroup || "foundation",
-      status: batch.status || "active"
+      name: b.name || "", course: b.course?._id || "", mentor: b.mentor?._id || "",
+      learners: b.learners?.map((l) => l._id) || [],
+      performanceGroup: b.performanceGroup || "foundation",
+      status: b.status || "active"
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const submitBatch = async (event) => {
-    event.preventDefault();
+  const submitBatch = async (e) => {
+    e.preventDefault();
     try {
-      if (editingId) {
-        await api.put(`/batches/${editingId}`, form);
-        toast.success("Batch updated");
-      } else {
-        await api.post("/batches", form);
-        toast.success("Batch created");
-      }
-      resetForm();
-      refresh();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to save batch");
-    }
+      if (editingId) { await api.put(`/batches/${editingId}`, form); toast.success("Batch updated"); }
+      else { await api.post("/batches", form); toast.success("Batch created"); }
+      resetForm(); refresh();
+    } catch (err) { toast.error(err.response?.data?.message || "Save failed"); }
   };
 
-  const toggleLearner = (learnerId) => {
-    const exists = form.learners.includes(learnerId);
-    setForm({
-      ...form,
-      learners: exists
-        ? form.learners.filter((id) => id !== learnerId)
-        : [...form.learners, learnerId]
-    });
+  const toggleLearner = (id) => {
+    const exists = form.learners.includes(id);
+    setForm({ ...form, learners: exists ? form.learners.filter((x) => x !== id) : [...form.learners, id] });
   };
 
-  const updateBatchStatus = async (batch, status) => {
-    try {
-      await api.put(`/batches/${batch._id}`, {
-        name: batch.name,
-        course: batch.course?._id,
-        mentor: batch.mentor?._id,
-        learners: batch.learners?.map((learner) => learner._id) || [],
-        performanceGroup: batch.performanceGroup,
-        status
-      });
-      toast.success(status === "archived" ? "Batch archived" : "Batch reactivated");
-      refresh();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to update batch");
-    }
-  };
+  if (lb || lc || lu) return <Loader label="Loading batches..." />;
 
-  if (loadingBatches || loadingCourses || loadingUsers) {
-    return <Loader label="Loading batches..." />;
-  }
+  const activeBatches = Array.isArray(batches) ? batches : [];
 
   return (
+    <>
+    {viewingBatch ? (
+      <BatchDetailModal
+        batch={viewingBatch}
+        onClose={() => setViewingBatch(null)}
+        onEdit={(b) => { startEdit(b); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+      />
+    ) : null}
     <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.24em] text-teal-700">Command Center</p>
-        <h2 className="font-display text-3xl text-slate-900">Batch Operations</h2>
-        <p className="mt-2 text-sm text-slate-500">
-          Assign courses, mentors, learners, status, and performance groups from one focused workspace.
-        </p>
-      </div>
+      <div className="grid gap-6 xl:grid-cols-[420px,1fr]">
+        {/* Create form */}
+        <form onSubmit={submitBatch} className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-card">
+          <h2 className="text-xl font-bold text-brand-ink">{editingId ? "Edit Batch" : "Create New Batch"}</h2>
+          <p className="mt-1 text-xs text-slate-500">Set up your teaching schedule and student groups.</p>
 
-      <div className="grid gap-6 xl:grid-cols-[0.82fr,1.18fr]">
-        <form onSubmit={submitBatch} className="rounded-[28px] bg-white p-6 shadow-panel">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="font-display text-2xl">{editingId ? "Edit Batch" : "Create Batch"}</h3>
-            {editingId ? (
-              <button type="button" className="rounded-2xl border px-4 py-2 text-sm font-medium" onClick={resetForm}>
-                Cancel
-              </button>
-            ) : null}
-          </div>
+          <div className="mt-5 space-y-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Batch Name</label>
+              <input
+                value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required
+                placeholder="e.g. 12th Class - Science - Morning"
+                className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20"
+              />
+            </div>
 
-          <div className="mt-5 space-y-4">
-            <input
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3"
-              placeholder="Batch name"
-              value={form.name}
-              onChange={(event) => setForm({ ...form, name: event.target.value })}
-              required
-            />
-            <select className="w-full rounded-2xl border border-slate-200 px-4 py-3" value={form.course} onChange={(event) => setForm({ ...form, course: event.target.value })} required>
-              <option value="">Select course</option>
-              {courses.map((course) => <option key={course._id} value={course._id}>{course.title}</option>)}
-            </select>
-            <select className="w-full rounded-2xl border border-slate-200 px-4 py-3" value={form.mentor} onChange={(event) => setForm({ ...form, mentor: event.target.value })} required>
-              <option value="">Select mentor</option>
-              {instructors.map((instructor) => <option key={instructor._id} value={instructor._id}>{instructor.name}</option>)}
-            </select>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <select className="w-full rounded-2xl border border-slate-200 px-4 py-3 capitalize" value={form.performanceGroup} onChange={(event) => setForm({ ...form, performanceGroup: event.target.value })}>
-                {performanceGroups.map((group) => <option key={group} value={group}>{group}</option>)}
-              </select>
-              <select className="w-full rounded-2xl border border-slate-200 px-4 py-3 capitalize" value={form.status} onChange={(event) => setForm({ ...form, status: event.target.value })}>
-                {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Select Course</label>
+                <select value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value })} required
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm">
+                  <option value="">Computer Science</option>
+                  {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Select Mentor</label>
+                <select value={form.mentor} onChange={(e) => setForm({ ...form, mentor: e.target.value })} required
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm">
+                  <option value="">Dr. Sarah Miller</option>
+                  {instructors.map((i) => <option key={i._id} value={i._id}>{i.name}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Track</label>
+              <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+                {performanceGroups.slice(0, 2).map((g) => (
+                  <button key={g} type="button"
+                    onClick={() => setForm({ ...form, performanceGroup: g })}
+                    className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold capitalize transition ${
+                      form.performanceGroup === g ? "bg-white text-brand-primary shadow-sm" : "text-slate-500"
+                    }`}>
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Status</label>
+              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm capitalize">
+                {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <input
-              className="w-full rounded-2xl border border-slate-200 px-4 py-3"
-              placeholder="Search learners"
-              value={learnerSearch}
-              onChange={(event) => setLearnerSearch(event.target.value)}
-            />
+
+            <div>
+              <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Learner Selection</label>
+              <div className="relative">
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
+                <input value={learnerSearch} onChange={(e) => setLearnerSearch(e.target.value)} placeholder="Search learners..."
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm placeholder:text-slate-400" />
+              </div>
+            </div>
+
+            <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-100">
+              {filteredLearners.slice(0, 10).map((l) => {
+                const checked = form.learners.includes(l._id);
+                return (
+                  <label key={l._id} className="flex items-center gap-3 border-b border-slate-50 px-3 py-2 last:border-0 hover:bg-slate-50">
+                    <input type="checkbox" checked={checked} onChange={() => toggleLearner(l._id)} className="rounded border-slate-300 text-brand-accent" />
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-surface text-[10px] font-bold text-brand-primary">
+                      {l.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-xs font-semibold text-brand-ink">{l.name}</p>
+                      <p className="truncate text-[10px] text-slate-500">ID: {l._id?.slice(-8).toUpperCase()}</p>
+                    </div>
+                  </label>
+                );
+              })}
+              {!filteredLearners.length ? <p className="px-3 py-3 text-xs text-slate-500">No learners found.</p> : null}
+            </div>
           </div>
 
-          <div className="mt-5 max-h-64 space-y-2 overflow-y-auto rounded-3xl border border-slate-100 p-3">
-            {filteredLearners.map((learner) => (
-              <label key={learner._id} className="flex items-center gap-3 rounded-2xl px-3 py-2 text-sm hover:bg-slate-50">
-                <input type="checkbox" checked={form.learners.includes(learner._id)} onChange={() => toggleLearner(learner._id)} />
-                <span>{learner.name}</span>
-                <span className="text-slate-400">{learner.email}</span>
-              </label>
-            ))}
-            {!filteredLearners.length ? <p className="px-3 py-2 text-sm text-slate-500">No learners match this search.</p> : null}
-          </div>
-
-          <button className="mt-5 w-full rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white">
+          <button type="submit" className="mt-5 w-full rounded-lg bg-brand-cta px-4 py-3 text-sm font-semibold text-white hover:brightness-95">
             {editingId ? "Save Batch" : "Create Batch"}
           </button>
+          {editingId ? (
+            <button type="button" onClick={resetForm} className="mt-2 w-full rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50">Cancel</button>
+          ) : null}
         </form>
 
-        <section className="rounded-[28px] bg-white p-6 shadow-panel">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h3 className="font-display text-2xl">Batches</h3>
-            <div className="flex flex-wrap gap-2">
-              <select className="rounded-2xl border border-slate-200 px-4 py-3 text-sm capitalize" value={filters.status} onChange={(event) => setFilters({ ...filters, status: event.target.value })}>
-                <option value="">All status</option>
-                {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
+        {/* Active batches */}
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-baseline gap-3">
+              <h2 className="text-3xl font-bold text-brand-ink">Active Batches</h2>
+              <span className="rounded-md bg-brand-ink px-2 py-0.5 text-xs font-bold text-white">{activeBatches.length} TOTAL</span>
+            </div>
+            <div className="flex gap-2">
+              <select value={filters.status} onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium capitalize">
+                <option value="">Status: All</option>
+                {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
-              <select className="rounded-2xl border border-slate-200 px-4 py-3 text-sm capitalize" value={filters.performanceGroup} onChange={(event) => setFilters({ ...filters, performanceGroup: event.target.value })}>
-                <option value="">All groups</option>
-                {performanceGroups.map((group) => <option key={group} value={group}>{group}</option>)}
+              <select value={filters.performanceGroup} onChange={(e) => setFilters({ ...filters, performanceGroup: e.target.value })}
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium capitalize">
+                <option value="">Group: All</option>
+                {performanceGroups.map((g) => <option key={g} value={g}>{g}</option>)}
               </select>
             </div>
           </div>
 
-          {!batches.length ? (
-            <div className="mt-6">
-              <EmptyState title="No batches found" description="Adjust filters or create a new batch." />
-            </div>
+          {!activeBatches.length ? (
+            <EmptyState title="No batches found" description="Adjust filters or create a new batch." />
           ) : (
-            <div className="mt-5 space-y-4">
-              {batches.map((batch) => (
-                <div key={batch._id} className="rounded-3xl border border-slate-100 p-5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-slate-900">{batch.name}</p>
-                      <p className="mt-1 text-sm text-slate-500">{batch.course?.title} · {batch.mentor?.name}</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold capitalize text-slate-600">{batch.performanceGroup}</span>
-                      <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${batch.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                        {batch.status}
+            <div className="space-y-3">
+              {activeBatches.map((b) => {
+                const trackClass = TRACK_PILL[b.performanceGroup] || TRACK_PILL.foundation;
+                return (
+                  <div key={b._id}
+                    className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-card transition-all hover:shadow-cardHover">
+                    <div className="flex flex-wrap items-start gap-2">
+                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                        {b.status === "active" ? "Active" : b.status}
+                      </span>
+                      <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${trackClass}`}>
+                        {b.performanceGroup}
                       </span>
                     </div>
+                    <h3 className="mt-2 text-base font-bold text-brand-ink">{b.name}</h3>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                      <span className="flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
+                        {b.course?.title || "—"}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><circle cx="12" cy="8" r="4" /><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" /></svg>
+                        {b.mentor?.name || "Unassigned"}
+                      </span>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" /></svg>
+                        <span className="font-semibold text-brand-ink">{b.learners?.length || 0}</span> Learners
+                        <span className="ml-3">Updated {formatDate(b.updatedAt)}</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => { startEdit(b); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                          className="text-xs font-medium text-slate-500 hover:text-brand-ink hover:underline">
+                          Edit
+                        </button>
+                        <button onClick={() => setViewingBatch(b)}
+                          className="text-xs font-semibold text-brand-accent hover:underline">
+                          View Details →
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <p className="mt-4 text-sm text-slate-500">
-                    {batch.learners?.length || 0} learners · Updated {formatDate(batch.updatedAt)}
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white" onClick={() => startEdit(batch)}>
-                      Edit
-                    </button>
-                    {batch.status === "active" ? (
-                      <button className="rounded-2xl border border-amber-200 px-4 py-3 text-sm font-medium text-amber-700" onClick={() => updateBatchStatus(batch, "archived")}>
-                        Archive
-                      </button>
-                    ) : (
-                      <button className="rounded-2xl border border-emerald-200 px-4 py-3 text-sm font-medium text-emerald-700" onClick={() => updateBatchStatus(batch, "active")}>
-                        Reactivate
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       </div>
     </div>
+    </>
   );
 };
 

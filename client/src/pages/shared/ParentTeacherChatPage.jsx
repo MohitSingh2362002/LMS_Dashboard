@@ -1,194 +1,257 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 import api from "../../api/client";
-import EmptyState from "../../components/EmptyState";
 import Loader from "../../components/Loader";
 import { useAuth } from "../../context/AuthContext";
 import useFetch from "../../hooks/useFetch";
 import { formatDate, SOCKET_URL } from "../../utils/helpers";
+
+const Avatar = ({ name, size = "h-9 w-9", color = "bg-brand-primary" }) => (
+  <div className={`flex flex-shrink-0 items-center justify-center rounded-full text-xs font-bold text-white ${size} ${color}`}>
+    {(name || "?").slice(0, 2).toUpperCase()}
+  </div>
+);
+
+const AVATAR_COLORS = ["bg-brand-primary", "bg-brand-accent", "bg-emerald-500", "bg-violet-500", "bg-rose-500"];
 
 const ParentTeacherChatPage = () => {
   const { user } = useAuth();
   const [activeConversation, setActiveConversation] = useState("");
   const [message, setMessage] = useState("");
   const [socket, setSocket] = useState(null);
-  const { data: contacts, loading: loadingContacts } = useFetch(
+  const messagesEndRef = useRef(null);
+
+  const { data: contacts } = useFetch(
     () => (user.role === "parent" ? api.get("/chat/contacts") : Promise.resolve({ data: { links: [] } })),
     [user.role]
   );
-  const { data: conversations, loading: loadingConversations, refresh: refreshConversations } = useFetch(
-    () => api.get("/chat/conversations"),
-    []
-  );
-  const { data: messages, setData: setMessages, loading: loadingMessages, refresh: refreshMessages } = useFetch(
+  const { data: conversations, loading: lc, refresh: refreshConversations } = useFetch(() => api.get("/chat/conversations"), []);
+  const { data: messages, setData: setMessages, loading: lm } = useFetch(
     () => (activeConversation ? api.get(`/chat/conversations/${activeConversation}/messages`) : Promise.resolve({ data: [] })),
     [activeConversation]
   );
 
-  const active = useMemo(
-    () => conversations.find((conversation) => conversation._id === activeConversation),
-    [conversations, activeConversation]
-  );
+  const active = useMemo(() => conversations.find((c) => c._id === activeConversation), [conversations, activeConversation]);
   const contactLinks = contacts.links || [];
 
   useEffect(() => {
-    const nextSocket = io(SOCKET_URL, { transports: ["websocket", "polling"] });
-    setSocket(nextSocket);
-    return () => nextSocket.disconnect();
+    const s = io(SOCKET_URL, { transports: ["websocket", "polling"] });
+    setSocket(s);
+    return () => s.disconnect();
   }, []);
 
   useEffect(() => {
     if (!socket || !activeConversation) return undefined;
     socket.emit("join-conversation", { conversationId: activeConversation });
-    const onMessage = (incoming) => {
+    const handler = (incoming) => {
       if (String(incoming.conversation) !== String(activeConversation)) return;
-      setMessages((current) => {
-        if (current.some((item) => item._id === incoming._id)) return current;
-        return [...current, incoming];
-      });
+      setMessages((cur) => cur.some((m) => m._id === incoming._id) ? cur : [...cur, incoming]);
     };
-    socket.on("chat:message", onMessage);
-    return () => socket.off("chat:message", onMessage);
+    socket.on("chat:message", handler);
+    return () => socket.off("chat:message", handler);
   }, [socket, activeConversation, setMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const startConversation = async (link) => {
     try {
-      const { data } = await api.post("/chat/conversations", {
-        learner: link.learner._id,
-        teacher: link.teacher._id
-      });
+      const { data } = await api.post("/chat/conversations", { learner: link.learner._id, teacher: link.teacher._id });
       await refreshConversations();
       setActiveConversation(data._id);
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to start chat");
-    }
+    } catch (err) { toast.error(err.response?.data?.message || "Unable to start chat"); }
   };
 
-  const sendMessage = async (event) => {
-    event.preventDefault();
+  const sendMessage = async (e) => {
+    e.preventDefault();
     if (!message.trim() || !activeConversation) return;
     try {
       await api.post(`/chat/conversations/${activeConversation}/messages`, { body: message });
       setMessage("");
       refreshConversations();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to send message");
-    }
+    } catch (err) { toast.error(err.response?.data?.message || "Send failed"); }
   };
 
-  if (loadingContacts || loadingConversations) return <Loader label="Loading chat..." />;
+  if (lc) return <Loader label="Loading chat..." />;
+
+  const convList = Array.isArray(conversations) ? conversations : [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs uppercase tracking-[0.24em] text-teal-700">Communication</p>
-        <h2 className="font-display text-3xl text-slate-900">Parent-Teacher Chat</h2>
-        <p className="mt-2 text-sm text-slate-500">Direct communication between parents and assigned teachers or batch mentors.</p>
-      </div>
+    <div className="flex h-[calc(100vh-104px)] overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card">
+      {/* Sidebar */}
+      <aside className="flex w-72 flex-shrink-0 flex-col border-r border-slate-100">
+        {/* Sidebar header */}
+        <div className="border-b border-slate-100 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-brand-ink">Active Chats</p>
+            <span className="rounded-md bg-brand-primary px-2 py-0.5 text-[10px] font-bold text-white">
+              {convList.length} Active
+            </span>
+          </div>
+        </div>
 
-      <div className="grid gap-6 xl:grid-cols-[360px,1fr]">
-        <aside className="space-y-6">
-          {user.role === "parent" ? (
-            <section className="rounded-[28px] bg-white p-5 shadow-panel">
-              <h3 className="font-display text-xl">Assigned Teachers</h3>
-              <div className="mt-4 space-y-3">
-                {contactLinks.map((link) => (
-                  <button
-                    key={`${link.learner._id}-${link.teacher._id}`}
-                    className="w-full rounded-2xl border border-slate-100 p-4 text-left hover:bg-slate-50"
-                    onClick={() => startConversation(link)}
-                  >
-                    <p className="font-semibold text-slate-900">{link.teacher.name}</p>
-                    <p className="mt-1 text-sm text-slate-500">{link.learner.name} · {link.source}</p>
-                  </button>
-                ))}
-                {!contactLinks.length ? <p className="text-sm text-slate-500">No assigned teachers found for linked learners.</p> : null}
-              </div>
-            </section>
-          ) : null}
+        {/* Contacts (parent only) */}
+        {user.role === "parent" && contactLinks.length > 0 ? (
+          <div className="border-b border-slate-100 px-3 py-2">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">Assigned Teachers</p>
+            {contactLinks.map((link) => (
+              <button key={`${link.learner._id}-${link.teacher._id}`}
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs hover:bg-slate-50"
+                onClick={() => startConversation(link)}>
+                <Avatar name={link.teacher.name} size="h-7 w-7" color="bg-brand-accent" />
+                <div>
+                  <p className="font-semibold text-brand-ink">{link.teacher.name}</p>
+                  <p className="text-slate-500">{link.learner.name}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : null}
 
-          <section className="rounded-[28px] bg-white p-5 shadow-panel">
-            <h3 className="font-display text-xl">Conversations</h3>
-            <div className="mt-4 space-y-3">
-              {conversations.map((conversation) => {
-                const other = user.role === "parent" ? conversation.teacher : conversation.parent;
-                return (
-                  <button
-                    key={conversation._id}
-                    className={`w-full rounded-2xl border p-4 text-left ${activeConversation === conversation._id ? "border-teal-600 bg-teal-50" : "border-slate-100 hover:bg-slate-50"}`}
-                    onClick={() => setActiveConversation(conversation._id)}
-                  >
-                    <p className="font-semibold text-slate-900">{other?.name}</p>
-                    <p className="mt-1 text-sm text-slate-500">{conversation.learner?.name} · {conversation.batch?.name || conversation.course?.title || "General"}</p>
-                    {conversation.lastMessage ? <p className="mt-2 truncate text-sm text-slate-500">{conversation.lastMessage}</p> : null}
-                  </button>
-                );
-              })}
-              {!conversations.length ? <p className="text-sm text-slate-500">No conversations yet.</p> : null}
-            </div>
-          </section>
-        </aside>
-
-        <section className="flex min-h-[620px] flex-col rounded-[28px] bg-white shadow-panel">
-          {!activeConversation ? (
-            <div className="flex flex-1 items-center justify-center p-8">
-              <EmptyState title="Select a conversation" description="Choose an existing conversation or start one from assigned teachers." />
-            </div>
+        {/* Conversation list */}
+        <div className="flex-1 overflow-y-auto">
+          {convList.length === 0 ? (
+            <p className="px-4 py-6 text-center text-xs text-slate-400">No conversations yet</p>
           ) : (
-            <>
-              <div className="border-b border-slate-100 p-5">
-                <p className="font-semibold text-slate-900">
-                  {user.role === "parent" ? active?.teacher?.name : active?.parent?.name}
-                </p>
-                <p className="mt-1 text-sm text-slate-500">{active?.learner?.name} · {active?.batch?.name || active?.course?.title || "General"}</p>
-              </div>
+            convList.map((conv, i) => {
+              const other = user.role === "parent" ? conv.teacher : conv.parent;
+              const isActive = activeConversation === conv._id;
+              const unread = conv.unread || 0;
+              return (
+                <button key={conv._id} onClick={() => setActiveConversation(conv._id)}
+                  className={`flex w-full items-start gap-3 border-b border-slate-50 px-4 py-3 text-left transition last:border-0 ${isActive ? "bg-brand-surface" : "hover:bg-slate-50"}`}>
+                  <Avatar name={other?.name} size="h-9 w-9" color={AVATAR_COLORS[i % AVATAR_COLORS.length]} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-1">
+                      <p className={`truncate text-sm font-semibold ${isActive ? "text-brand-primary" : "text-brand-ink"}`}>{other?.name || "—"}</p>
+                      {unread > 0 ? <span className="flex-shrink-0 rounded-full bg-brand-cta px-1.5 py-0.5 text-[9px] font-bold text-white">{unread}</span> : null}
+                    </div>
+                    <p className="text-[10px] text-slate-500">{conv.learner?.name} • Batch {conv.batch?.name || "—"}</p>
+                    {conv.lastMessage ? (
+                      <p className="mt-0.5 truncate text-xs text-slate-400">{conv.lastMessage}</p>
+                    ) : null}
+                    <p className="mt-0.5 text-[9px] text-slate-400">{formatDate(conv.updatedAt)}</p>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
 
-              <div className="flex-1 space-y-3 overflow-y-auto p-5">
-                {loadingMessages ? (
-                  <Loader label="Loading messages..." />
-                ) : (
-                  messages.map((item) => {
-                    const mine = String(item.sender?._id) === String(user._id);
-                    const senderRole =
-                      user.role === "admin"
-                        ? String(item.sender?._id) === String(active?.parent?._id)
-                          ? "Parent"
-                          : String(item.sender?._id) === String(active?.teacher?._id)
-                            ? "Instructor"
-                            : item.sender?.role || "Sender"
-                        : "";
+        {/* Bottom user info */}
+        <div className="border-t border-slate-100 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Avatar name={user.name} size="h-8 w-8" color="bg-brand-primary" />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-brand-ink">{user.name}</p>
+              <p className="truncate text-[10px] text-slate-500">{user.email}</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Chat area */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {!activeConversation ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-surface text-brand-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8"><path d="M21 15a4 4 0 01-4 4H8l-5 4V7a4 4 0 014-4h10a4 4 0 014 4v8z" /></svg>
+            </div>
+            <p className="text-sm font-semibold text-brand-ink">Select a conversation</p>
+            <p className="text-xs text-slate-400">Choose a chat from the left panel</p>
+          </div>
+        ) : (
+          <>
+            {/* Chat header */}
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3">
+              <div className="flex items-center gap-3">
+                <Avatar name={user.role === "parent" ? active?.teacher?.name : active?.parent?.name}
+                  color="bg-brand-accent" />
+                <div>
+                  <p className="text-sm font-bold text-brand-ink">
+                    {user.role === "parent" ? active?.teacher?.name : active?.parent?.name}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {active?.learner?.name} • Batch {active?.batch?.name || "—"}
+                  </p>
+                </div>
+              </div>
+              <button className="rounded p-1.5 text-slate-400 hover:bg-slate-100">⋮</button>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 space-y-4 overflow-y-auto p-5">
+              {lm ? (
+                <Loader label="Loading messages..." />
+              ) : (
+                <>
+                  {/* Date divider */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 border-t border-slate-100" />
+                    <span className="text-[10px] font-semibold uppercase text-slate-400">Yesterday</span>
+                    <div className="flex-1 border-t border-slate-100" />
+                  </div>
+
+                  {Array.isArray(messages) && messages.map((msg) => {
+                    const mine = String(msg.sender?._id) === String(user._id);
+                    const senderRole = !mine ? (
+                      String(msg.sender?._id) === String(active?.parent?._id) ? "PARENT" : "INSTRUCTOR"
+                    ) : null;
+
                     return (
-                      <div key={item._id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                        <div className={`max-w-[78%] rounded-3xl p-4 ${mine ? "bg-teal-700 text-white" : "bg-slate-100 text-slate-800"}`}>
-                          {user.role === "admin" ? (
-                            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-                              {senderRole} · {item.sender?.name || "Unknown"}
+                      <div key={msg._id} className={`flex gap-3 ${mine ? "justify-end" : "justify-start"}`}>
+                        {!mine ? <Avatar name={msg.sender?.name} size="h-8 w-8" color="bg-brand-accent" /> : null}
+                        <div className={`max-w-[72%] space-y-1 ${mine ? "items-end" : "items-start"} flex flex-col`}>
+                          {senderRole ? (
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                              {senderRole} · {msg.sender?.name}
                             </p>
                           ) : null}
-                          <p className="text-sm">{item.body}</p>
-                          <p className={`mt-2 text-[11px] ${mine ? "text-white/70" : "text-slate-400"}`}>{formatDate(item.createdAt)}</p>
+                          {msg.image ? (
+                            <div className="overflow-hidden rounded-2xl border border-slate-200">
+                              <img src={msg.image} alt="attachment" className="max-w-[280px] object-cover" />
+                            </div>
+                          ) : null}
+                          <div className={`rounded-2xl px-4 py-2.5 ${mine ? "bg-brand-primary text-white" : "bg-slate-100 text-brand-ink"}`}>
+                            <p className="text-sm leading-relaxed">{msg.body}</p>
+                          </div>
+                          <p className="text-[10px] text-slate-400">{formatDate(msg.createdAt)}</p>
                         </div>
+                        {mine ? <Avatar name={user.name} size="h-8 w-8" color="bg-brand-primary" /> : null}
                       </div>
                     );
-                  })
-                )}
-              </div>
+                  })}
 
-              <form className="border-t border-slate-100 p-5" onSubmit={sendMessage}>
-                <div className="flex gap-3">
-                  <input
-                    className="min-w-0 flex-1 rounded-2xl border border-slate-200 px-4 py-3"
-                    placeholder="Type message"
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                  />
-                  <button className="rounded-2xl bg-teal-700 px-5 py-3 text-sm font-medium text-white">Send</button>
-                </div>
-              </form>
-            </>
-          )}
-        </section>
+                  {/* Today divider */}
+                  {messages.length > 0 ? (
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 border-t border-slate-100" />
+                      <span className="text-[10px] font-semibold uppercase text-slate-400">Today</span>
+                      <div className="flex-1 border-t border-slate-100" />
+                    </div>
+                  ) : null}
+
+                  <div ref={messagesEndRef} />
+                </>
+              )}
+            </div>
+
+            {/* Input */}
+            <form onSubmit={sendMessage} className="border-t border-slate-100 px-4 py-3">
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
+                <input value={message} onChange={(e) => setMessage(e.target.value)}
+                  placeholder={`Type your message to ${user.role === "parent" ? active?.teacher?.name : active?.parent?.name}...`}
+                  className="flex-1 bg-transparent text-sm placeholder:text-slate-400 focus:outline-none" />
+                <button type="submit"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cta text-white hover:brightness-95">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

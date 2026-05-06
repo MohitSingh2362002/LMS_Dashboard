@@ -214,6 +214,18 @@ export const bulkImportQuestions = asyncHandler(async (req, res) => {
 });
 
 export const getMockTests = asyncHandler(async (req, res) => {
+  // Auto-publish any scheduled tests whose startsAt has arrived
+  const now = new Date();
+  await MockTest.updateMany(
+    { status: "scheduled", startsAt: { $lte: now } },
+    { $set: { status: "published" } }
+  );
+  // Auto-archive published tests whose endsAt has passed (if set)
+  await MockTest.updateMany(
+    { status: "published", endsAt: { $lte: now, $exists: true, $ne: null } },
+    { $set: { status: "archived" } }
+  );
+
   const filter = {};
 
   if (req.user.role === "learner") {
@@ -267,6 +279,28 @@ export const createMockTest = asyncHandler(async (req, res) => {
     .populate("questions", "subject chapter topic marks");
 
   res.status(201).json(populated);
+});
+
+export const updateMockTest = asyncHandler(async (req, res) => {
+  const test = await MockTest.findById(req.params.id);
+  if (!test) {
+    res.status(404);
+    throw new Error("Mock test not found");
+  }
+
+  const allowed = ["title", "examPattern", "status", "durationMinutes", "batch", "course", "startsAt", "endsAt"];
+  allowed.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      test[field] = req.body[field] === "" ? null : req.body[field];
+    }
+  });
+
+  const updated = await test.save();
+  const populated = await MockTest.findById(updated._id)
+    .populate("course", "title")
+    .populate("batch", "name performanceGroup")
+    .populate("questions", "subject chapter topic marks");
+  res.json(populated);
 });
 
 export const getMockTestForAttempt = asyncHandler(async (req, res) => {

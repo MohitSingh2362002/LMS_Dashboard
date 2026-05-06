@@ -3,12 +3,30 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
+      colors: {
+        brand: {
+          primary: "#1A4FA0",
+          accent: "#2E7FD9",
+          cta: "#F0A500",
+          surface: "#EAF3FC",
+          background: "#F7F8FA",
+          ink: "#1C1E2B"
+        },
+        sidebar: {
+          DEFAULT: "#1C1E2B",
+          hover: "#262A3D",
+          active: "#2E7FD9",
+          muted: "#8A8FA3"
+        }
+      },
       fontFamily: {
-        display: ["Georgia", "serif"],
-        body: ["'IBM Plex Sans'", "system-ui", "sans-serif"]
+        display: ["'Inter'", "system-ui", "sans-serif"],
+        body: ["'Inter'", "system-ui", "sans-serif"]
       },
       boxShadow: {
-        panel: "0 18px 50px rgba(15, 23, 42, 0.12)"
+        panel: "0 12px 40px rgba(28, 30, 43, 0.08)",
+        card: "0 1px 3px rgba(28, 30, 43, 0.06), 0 1px 2px rgba(28, 30, 43, 0.04)",
+        cardHover: "0 8px 24px rgba(28, 30, 43, 0.10)"
       },
       keyframes: {
         fadeIn: {

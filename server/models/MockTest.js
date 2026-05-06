@@ -5,7 +5,7 @@ const mockTestSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     examPattern: {
       type: String,
-      enum: ["NEET", "Olympiad"],
+      enum: ["NEET", "Olympiad", "Foundation"],
       default: "NEET"
     },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
@@ -16,7 +16,7 @@ const mockTestSchema = new mongoose.Schema(
     endsAt: { type: Date },
     status: {
       type: String,
-      enum: ["draft", "published", "archived"],
+      enum: ["draft", "published", "archived", "scheduled"],
       default: "draft"
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }

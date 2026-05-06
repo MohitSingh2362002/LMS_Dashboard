@@ -13,6 +13,7 @@ import AdminLiveClassesPage from "./pages/admin/AdminLiveClassesPage";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
 import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
@@ -89,6 +90,7 @@ function App() {
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses" element={<AdminCoursesPage />} />
         <Route path="users" element={<AdminUsersPage />} />
+        <Route path="instructor" element={<AdminInstructorPage />} />
         <Route path="live-classes" element={<AdminLiveClassesPage />} />
         <Route path="questions" element={<AdminQuestionsPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />

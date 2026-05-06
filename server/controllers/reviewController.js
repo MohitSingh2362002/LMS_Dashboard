@@ -68,6 +68,23 @@ export const updateReview = asyncHandler(async (req, res) => {
   res.json(review);
 });
 
+export const replyToReview = asyncHandler(async (req, res) => {
+  const review = await Review.findById(req.params.id)
+    .populate("learner", "name avatar")
+    .populate("course", "title");
+
+  if (!review) {
+    res.status(404);
+    throw new Error("Review not found");
+  }
+
+  review.adminReply = req.body.reply || "";
+  review.adminRepliedAt = new Date();
+  await review.save();
+
+  res.json(review);
+});
+
 export const deleteReview = asyncHandler(async (req, res) => {
   const review = await Review.findById(req.params.id);
 

@@ -13,7 +13,8 @@ const userSchema = new mongoose.Schema(
     },
     linkedLearners: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     avatar: { type: String, default: "" },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    studentId: { type: String, default: "" }
   },
   { timestamps: true }
 );

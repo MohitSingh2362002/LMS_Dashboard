@@ -9,11 +9,12 @@ const sanitizeUser = (user) => ({
   avatar: user.avatar,
   linkedLearners: user.linkedLearners || [],
   isActive: user.isActive,
+  studentId: user.studentId || "",
   createdAt: user.createdAt
 });
 
 export const getUsers = asyncHandler(async (req, res) => {
-  const filter = {};
+  const filter = { isActive: { $ne: false } };
   if (req.query.role) {
     filter.role = req.query.role;
   } else {
@@ -54,11 +55,19 @@ export const createUser = asyncHandler(async (req, res) => {
     }
   }
 
+  // Generate studentId for learners (STU + zero-padded count)
+  let studentId = "";
+  if (role === "learner") {
+    const learnerCount = await User.countDocuments({ role: "learner" });
+    studentId = `STU${String(learnerCount + 1).padStart(5, "0")}`;
+  }
+
   const user = await User.create({
     name,
     email,
     password,
     role,
+    studentId,
     linkedLearners: role === "parent" ? linkedLearners : []
   });
 
