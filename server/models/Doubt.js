@@ -15,6 +15,11 @@ const doubtSchema = new mongoose.Schema(
       path: { type: String, default: "" },
       size: { type: Number, default: 0 }
     },
+    image: {
+      name: { type: String, default: "" },
+      path: { type: String, default: "" },
+      size: { type: Number, default: 0 }
+    },
     answer: { type: String, default: "" },
     answeredBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     answeredAt: { type: Date },

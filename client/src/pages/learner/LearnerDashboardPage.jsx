@@ -1,389 +1,479 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/client";
-import useFetch from "../../hooks/useFetch";
-import Loader from "../../components/Loader";
 import EmptyState from "../../components/EmptyState";
-import Stars from "../../components/Stars";
-import StatCard from "../../components/StatCard";
-import ChartCard from "../../components/charts/ChartCard";
-import BarChart from "../../components/charts/BarChart";
-import { downloadCertificate } from "../../utils/certificate";
-import { getFullImageUrl, stripHtml, average, getLiveTestStatus } from "../../utils/helpers";
+import Loader from "../../components/Loader";
+import useFetch from "../../hooks/useFetch";
 import { buildLiveClassJoinUrl } from "../../utils/liveClass";
 import { useAuth } from "../../context/AuthContext";
+import { CourseThumbnail } from "../../components/learner/LearnerPortalUI";
 
+/* ── Icons ───────────────────────────────────────────────────────────── */
+const IcBook = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
+  </svg>
+);
+const IcCheck = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+const IcTrend = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
+  </svg>
+);
+const IcUsers = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+const IcTest = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 0 2-2h2a2 2 0 0 0 2 2" /><polyline points="9 12 11 14 15 10" />
+  </svg>
+);
+const IcHistory = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M12 7v5l4 2" />
+  </svg>
+);
+const IcDoubt = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+const IcLeader = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+    <polyline points="18 20 18 10" /><polyline points="12 20 12 4" /><polyline points="6 20 6 14" />
+  </svg>
+);
+const IcCalendar = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+const IcVideo = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+    <polygon points="23 7 16 12 23 17 23 7" /><rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+  </svg>
+);
+const IcStar = ({ filled }) => (
+  <svg viewBox="0 0 24 24" fill={filled ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" className="h-4 w-4 text-yellow-400">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+/* ── Stat Card ───────────────────────────────────────────────────────── */
+const StatCard = ({ icon, label, value, sub, accent = "blue" }) => {
+  const bg = {
+    blue: "bg-blue-50 text-brand-primary",
+    green: "bg-emerald-50 text-emerald-600",
+    amber: "bg-amber-50 text-amber-600",
+    purple: "bg-purple-50 text-purple-600",
+  }[accent];
+  return (
+    <div className="flex items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card">
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${bg}`}>{icon}</div>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+        <p className="mt-0.5 text-2xl font-extrabold text-brand-ink">{value}</p>
+        {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
+      </div>
+    </div>
+  );
+};
+
+/* ── Quick Tile ──────────────────────────────────────────────────────── */
+const QuickTile = ({ icon, label, sub, to, accent = "blue" }) => {
+  const colors = {
+    blue:   { bg: "bg-brand-surface",  icon: "text-brand-primary", border: "border-brand-primary/20" },
+    green:  { bg: "bg-emerald-50",     icon: "text-emerald-600",   border: "border-emerald-200" },
+    amber:  { bg: "bg-amber-50",       icon: "text-amber-600",     border: "border-amber-200" },
+    purple: { bg: "bg-purple-50",      icon: "text-purple-600",    border: "border-purple-200" },
+  }[accent];
+  return (
+    <Link
+      to={to}
+      className={`group flex flex-col items-center gap-3 rounded-2xl border ${colors.border} ${colors.bg} p-5 text-center transition hover:shadow-md hover:-translate-y-0.5`}
+    >
+      <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm ${colors.icon}`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm font-bold text-brand-ink">{label}</p>
+        {sub && <p className="mt-0.5 text-[11px] text-slate-500">{sub}</p>}
+      </div>
+    </Link>
+  );
+};
+
+/* ── Schedule Item ───────────────────────────────────────────────────── */
+const ScheduleItem = ({ item, user }) => {
+  const d = new Date(item.date);
+  const month = d.toLocaleDateString("en-IN", { month: "short" });
+  const day   = d.getDate();
+  const time  = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+
+  const pill =
+    item.type === "class"
+      ? "bg-brand-surface text-brand-primary"
+      : "bg-amber-50 text-amber-700";
+  const pillLabel = item.type === "class" ? "Live Class" : "Mock Test";
+
+  const content = (
+    <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm transition hover:shadow-md hover:border-brand-primary/30">
+      <div className="flex h-12 w-12 shrink-0 flex-col items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+        <span className="text-[10px] font-bold uppercase text-brand-primary">{month}</span>
+        <span className="text-lg font-extrabold text-brand-ink leading-none">{day}</span>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-bold text-brand-ink">{item.title}</p>
+        <p className="text-[11px] text-slate-500">{time} · {item.meta}</p>
+      </div>
+      <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold ${pill}`}>{pillLabel}</span>
+    </div>
+  );
+
+  if (item.liveClass?.status === "live") {
+    return (
+      <button className="block w-full text-left" onClick={() => window.open(buildLiveClassJoinUrl(item.liveClass, user), "_blank", "noopener,noreferrer")}>
+        {content}
+      </button>
+    );
+  }
+  if (item.to) return <Link to={item.to}>{content}</Link>;
+  return content;
+};
+
+/* ── Main Page ───────────────────────────────────────────────────────── */
 const LearnerDashboardPage = () => {
   const { user } = useAuth();
   const { data: enrollments, loading, refresh } = useFetch(() => api.get("/enrollments/mine"), []);
-  const { data: courses } = useFetch(() => api.get("/courses"), []);
-  const { data: liveClasses, refresh: refreshLiveClasses } = useFetch(() => api.get("/live-classes"), []);
-  const [question, setQuestion] = useState("");
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [search, setSearch] = useState("");
-  const { data: questions, refresh: refreshQuestions } = useFetch(() => api.get("/questions"), []);
-  const { data: reviews, refresh: refreshReviews } = useFetch(() => api.get("/reviews"), []);
-  const [reviewForms, setReviewForms] = useState({});
-
-  const enrolledIds = useMemo(
-    () => new Set(enrollments.map((item) => item.course?._id)),
-    [enrollments]
-  );
-  const availableCourses = useMemo(
-    () => courses.filter((course) => !enrolledIds.has(course._id) && course.status === "published"),
-    [courses, enrolledIds]
-  );
-  const filteredQuestions = useMemo(
-    () => questions.filter((item) => item.question.toLowerCase().includes(search.toLowerCase())),
-    [questions, search]
-  );
-
-  const dashStats = useMemo(() => {
-    const avgProgress = enrollments.length
-      ? Math.round(enrollments.reduce((s, e) => s + (e.progress || 0), 0) / enrollments.length)
-      : 0;
-    const completed = enrollments.filter((e) => e.progress === 100).length;
-    const liveCount = Array.isArray(liveClasses) ? liveClasses.filter((lc) => lc.status === "live").length : 0;
-    return { avgProgress, completed, liveCount };
-  }, [enrollments, liveClasses]);
-
-  const courseProgressChart = useMemo(() => ({
-    labels: enrollments.slice(0, 8).map((e) => {
-      const t = e.course?.title || "Course";
-      return t.length > 14 ? t.slice(0, 14) + "…" : t;
-    }),
-    values: enrollments.slice(0, 8).map((e) => e.progress || 0),
-  }), [enrollments]);
+  const { data: courses }    = useFetch(() => api.get("/courses"), []);
+  const { data: liveClasses, refresh: refreshLive } = useFetch(() => api.get("/live-classes"), []);
+  const { data: tests }      = useFetch(() => api.get("/exam/tests"), []);
+  const { data: attempts }   = useFetch(() => api.get("/exam/attempts/mine"), []);
+  const { data: lbData }     = useFetch(() => api.get("/analytics/leaderboard?limit=5&days=30"), []);
+  const { data: announcements } = useFetch(() => api.get("/announcements"), []);
 
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      refreshLiveClasses();
-    }, 30000);
+    const id = window.setInterval(refreshLive, 30_000);
+    return () => window.clearInterval(id);
+  }, [refreshLive]);
 
-    return () => window.clearInterval(intervalId);
-  }, [refreshLiveClasses]);
+  const stats = useMemo(() => {
+    const avg = enrollments.length
+      ? Math.round(enrollments.reduce((s, e) => s + (e.progress || 0), 0) / enrollments.length)
+      : 0;
+    return {
+      enrolled:  enrollments.length,
+      completed: enrollments.filter((e) => e.progress >= 100).length,
+      progress:  avg,
+    };
+  }, [enrollments]);
+
+  const enrolledIds = useMemo(() => new Set(enrollments.map((e) => e.course?._id)), [enrollments]);
+  const recommended = useMemo(
+    () => courses.filter((c) => c.status === "published" && !enrolledIds.has(c._id)).slice(0, 3),
+    [courses, enrolledIds]
+  );
+
+  const liveClass = liveClasses.find((c) => c.status === "live");
+
+  const schedule = useMemo(() => {
+    const live = liveClasses.slice(0, 4).map((c) => ({
+      id: `live-${c._id}`, title: c.title,
+      meta: c.course?.title || "Live class",
+      date: c.scheduledAt || c.startsAt || c.createdAt,
+      type: "class", liveClass: c,
+    }));
+    const testItems = tests.slice(0, 4).map((t) => ({
+      id: `test-${t._id}`, title: t.title,
+      meta: `${t.durationMinutes ?? "?"} min · ${t.questions?.length || 0} Qs`,
+      date: t.startsAt || t.updatedAt,
+      type: "test", to: `/learner/exam/tests/${t._id}`,
+    }));
+    return [...live, ...testItems]
+      .filter((i) => i.date)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(0, 4);
+  }, [liveClasses, tests]);
+
+  const leaderboard = lbData?.leaderboard || [];
 
   const enroll = async (courseId) => {
     try {
       await api.post("/enrollments", { courseId });
-      toast.success("Enrolled successfully");
+      toast.success("Enrolled successfully!");
       refresh();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Enrollment failed");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Enrollment failed");
     }
   };
 
-  const submitQuestion = async () => {
-    if (!question.trim()) return;
-    try {
-      await api.post("/questions", { question, course: selectedCourse || null });
-      toast.success("Question submitted");
-      setQuestion("");
-      setSelectedCourse("");
-      refreshQuestions();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to submit question");
-    }
-  };
+  if (loading) return <Loader variant="skeleton" label="Loading dashboard…" />;
 
-  const submitReview = async (courseId, existingReview) => {
-    const form = reviewForms[courseId];
-    if (!form) return;
-    try {
-      if (existingReview) {
-        await api.put(`/reviews/${existingReview._id}`, form);
-        toast.success("Review updated");
-      } else {
-        await api.post("/reviews", { ...form, course: courseId });
-        toast.success("Review added");
-      }
-      refreshReviews();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to save review");
-    }
-  };
-
-  const deleteReview = async (reviewId) => {
-    try {
-      await api.delete(`/reviews/${reviewId}`);
-      toast.success("Review deleted");
-      refreshReviews();
-    } catch (error) {
-      toast.error(error.response?.data?.message || "Unable to delete review");
-    }
-  };
-
-  if (loading) return <Loader variant="skeleton" label="Loading your courses..." />;
+  const firstName = user?.name?.split(" ")[0] || "Learner";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-8">
-      {/* Stats row */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Enrolled Courses" value={enrollments.length} helper="Active course enrollments" icon="📚" accentColor="teal" />
-        <StatCard label="Completed" value={dashStats.completed} helper="Courses finished at 100%" icon="✅" accentColor="indigo" />
-        <StatCard label="Avg Progress" value={`${dashStats.avgProgress}%`} helper="Across all courses" icon="📈" accentColor="amber" trend={dashStats.avgProgress >= 50 ? "up" : "neutral"} />
-        <StatCard label="Live Now" value={dashStats.liveCount} helper="Active live classes" icon="🔴" accentColor="rose" />
+    <div className="space-y-7 pb-8">
+
+      {/* ── Welcome Hero ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary via-brand-accent to-[#1A6FD0] px-7 py-6 text-white shadow-panel">
+        <div className="absolute inset-0 opacity-10"
+          style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
+        />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium text-white/70">{greeting},</p>
+            <h1 className="text-2xl font-extrabold">{firstName} 👋</h1>
+            <p className="mt-1 text-sm text-white/70">
+              {stats.enrolled} course{stats.enrolled !== 1 ? "s" : ""} enrolled · {stats.completed} completed
+            </p>
+          </div>
+          {liveClass ? (
+            <button
+              onClick={() => window.open(buildLiveClassJoinUrl(liveClass, user), "_blank", "noopener,noreferrer")}
+              className="flex items-center gap-3 rounded-xl bg-white/15 px-5 py-3 text-sm font-bold backdrop-blur-sm border border-white/20 hover:bg-white/25 transition"
+            >
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500" />
+              </span>
+              Live Now · {liveClass.title}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4 ml-1">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-5 py-3 text-sm text-white/60 border border-white/10">
+              <IcVideo />
+              No live class right now
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Course progress chart */}
-      {enrollments.length > 0 ? (
-        <ChartCard title="Course Progress" subtitle="Your progress across enrolled courses">
-          <BarChart
-            labels={courseProgressChart.labels}
-            datasets={[{ label: "Progress %", data: courseProgressChart.values, backgroundColor: "rgba(15, 118, 110, 0.85)" }]}
-            height={220}
-          />
-        </ChartCard>
-      ) : null}
+      {/* ── Announcements strip ── */}
+      {announcements.length > 0 && (
+        <div className="flex items-center gap-3 overflow-hidden rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
+          <span className="shrink-0 text-lg">📢</span>
+          <p className="flex-1 truncate text-sm font-medium text-amber-800">
+            <span className="font-bold">{announcements[0].title}: </span>
+            {announcements[0].message}
+          </p>
+        </div>
+      )}
 
+      {/* ── Stats Row ── */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={<IcBook />} label="Enrolled" value={String(stats.enrolled).padStart(2, "0")} sub="Active courses" accent="blue" />
+        <StatCard icon={<IcCheck />} label="Completed" value={String(stats.completed).padStart(2, "0")} sub="Finished courses" accent="green" />
+        <StatCard icon={<IcTrend />} label="Avg Progress" value={`${stats.progress}%`} sub="Overall completion" accent="amber" />
+        <StatCard icon={<IcTest />} label="Tests Taken" value={String(attempts.length).padStart(2, "0")} sub="Mock test attempts" accent="purple" />
+      </div>
+
+      {/* ── Study Zone ── */}
       <section>
-        <h2 className="font-display text-3xl text-slate-900">My Courses</h2>
-        <p className="mt-2 text-sm text-slate-500">Continue learning, track progress, and download certificates when you finish.</p>
-        {!enrollments.length ? (
-          <div className="mt-6">
-            <EmptyState title="No enrolled courses yet" description="Enroll in a course from the catalog below to get started." icon="📖" />
-          </div>
-        ) : (
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {enrollments.map((enrollment) => {
-              const liveTestStatus = getLiveTestStatus(enrollment.course?.liveTest);
-
-              return (
-                <article key={enrollment._id} className="animate-fadeIn overflow-hidden rounded-[28px] bg-white shadow-panel transition hover:shadow-lg">
-                  <div className="h-44 bg-slate-100">
-                    {enrollment.course?.thumbnail ? (
-                      <img src={getFullImageUrl(enrollment.course.thumbnail)} alt={enrollment.course.title} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="flex h-full items-center justify-center bg-gradient-to-br from-teal-100 to-amber-100 font-display text-3xl">
-                        {enrollment.course?.title?.slice(0, 1)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-display text-2xl">{enrollment.course?.title}</h3>
-                    <p className="mt-1 text-sm text-slate-500">{enrollment.course?.instructorDisplayName || enrollment.course?.instructor?.name}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {enrollment.course?.notes?.length ? (
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                          {enrollment.course.notes.length} note{enrollment.course.notes.length === 1 ? "" : "s"}
-                        </span>
-                      ) : null}
-                      {enrollment.course?.liveTest?.enabled ? (
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            liveTestStatus.tone === "emerald"
-                              ? "bg-emerald-100 text-emerald-700"
-                              : liveTestStatus.tone === "amber"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          Live Test {liveTestStatus.label}
-                        </span>
-                      ) : null}
-                    </div>
-                    <div className="mt-4 h-3 rounded-full bg-slate-100">
-                      <div className="h-3 rounded-full bg-teal-700 transition-all" style={{ width: `${enrollment.progress}%` }} />
-                    </div>
-                    <p className="mt-2 text-sm text-slate-500">{enrollment.progress}% complete</p>
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      <Link to={`/learner/courses/${enrollment._id}`} className="rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-teal-800">
-                        Continue Learning
-                      </Link>
-                      {enrollment.progress === 100 && enrollment.course?.advancedSettings?.certificateEnabled ? (
-                        <button
-                          className="rounded-2xl border px-4 py-3 text-sm font-medium transition hover:bg-slate-50"
-                          onClick={() =>
-                            downloadCertificate({
-                              learnerName: user.name,
-                              courseTitle: enrollment.course.title
-                            })
-                          }
-                        >
-                          Download Certificate
-                        </button>
-                      ) : null}
-                      {liveTestStatus.canJoin ? (
-                        <a
-                          href={enrollment.course?.liveTest?.link}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="rounded-2xl border px-4 py-3 text-sm font-medium transition hover:bg-slate-50"
-                        >
-                          Live Test
-                        </a>
-                      ) : null}
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <section className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex items-end justify-between">
           <div>
-            <h2 className="font-display text-2xl">Course Catalog</h2>
-            <p className="mt-2 text-sm text-slate-500">Browse available published courses and enroll in one click.</p>
+            <h2 className="text-xl font-extrabold text-brand-ink">Study Zone</h2>
+            <p className="text-xs text-slate-500">Quick access to your academic tools</p>
           </div>
         </div>
-        {!availableCourses.length ? (
-          <div className="mt-6">
-            <EmptyState title="All caught up!" description="You're enrolled in all available courses." icon="🎉" />
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <QuickTile icon={<IcUsers />} label="My Batches" sub="View your batches" to="/learner/batches" accent="blue" />
+          <QuickTile icon={<IcTest />} label="Mock Tests" sub="Test series & exams" to="/learner/exam" accent="amber" />
+          <QuickTile icon={<IcHistory />} label="Test History" sub="Past results" to={attempts[0] ? `/learner/exam/results/${attempts[0]._id}` : "/learner/exam"} accent="green" />
+          <QuickTile icon={<IcDoubt />} label="Doubt Vault" sub="Ask your mentor" to="/learner/doubts" accent="purple" />
+        </div>
+      </section>
+
+      {/* ── Recommended Courses ── */}
+      <section>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-extrabold text-brand-ink">Recommended Batches</h2>
+            <p className="text-xs text-slate-500">Curated courses based on your profile</p>
           </div>
-        ) : (
-          <div className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {availableCourses.map((course) => (
-              <div key={course._id} className="rounded-3xl border border-slate-100 p-5 transition hover:border-teal-200 hover:shadow-md">
-                <h3 className="font-display text-2xl">{course.title}</h3>
-                <p className="mt-2 text-sm text-slate-500">{stripHtml(course.tagline || course.description)}</p>
-                <p className="mt-3 text-sm font-semibold text-teal-700">
-                  {course.pricing?.type === "free" ? "Free" : `${course.pricing.currency} ${course.pricing.amount}`}
-                </p>
-                <button className="mt-5 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800" onClick={() => enroll(course._id)}>
-                  Enroll Now
-                </button>
-              </div>
+          <Link to="/learner/batches" className="text-xs font-bold text-brand-primary hover:underline">View All →</Link>
+        </div>
+
+        {recommended.length ? (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {recommended.map((course) => (
+              <RecommendedCard key={course._id} course={course} onEnroll={enroll} />
             ))}
           </div>
+        ) : enrollments.length ? (
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {enrollments.slice(0, 3).map((e) => (
+              <EnrolledCard key={e._id} enrollment={e} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No courses available" description="Recommended courses will appear here when published." />
         )}
       </section>
 
-      <section className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
-        <h2 className="font-display text-2xl">Live Classes</h2>
-        <p className="mt-2 text-sm text-slate-500">Join live sessions from your dashboard when they are active.</p>
-        {!liveClasses.length ? (
-          <div className="mt-5">
-            <EmptyState title="No live classes" description="Scheduled and active live classes will appear here." icon="📡" />
+      {/* ── Schedule + Leaderboard ── */}
+      <div className="grid gap-5 xl:grid-cols-[1fr_360px]">
+
+        {/* Weekly Schedule */}
+        <section className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-card">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-extrabold text-brand-ink">Weekly Schedule</h2>
+              <p className="text-xs text-slate-500">Upcoming classes and tests</p>
+            </div>
+            <Link to="/learner/attendance" className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-brand-primary hover:bg-brand-surface transition">
+              Full Calendar
+            </Link>
           </div>
-        ) : (
-          <div className="mt-5 grid gap-4 md:grid-cols-2">
-            {liveClasses.map((liveClass) => (
-              <div key={liveClass._id} className="rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{liveClass.title}</p>
-                    <p className="mt-1 text-sm text-slate-500">{liveClass.course?.title || "Standalone session"}</p>
-                  </div>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold ${liveClass.status === "live" ? "bg-emerald-100 text-emerald-700" : liveClass.status === "scheduled" ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-600"}`}>
-                    {liveClass.status}
-                  </span>
-                </div>
-                {liveClass.status === "live" ? (
-                  <button
-                    className="mt-4 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
-                    onClick={() => window.open(buildLiveClassJoinUrl(liveClass, user), "_blank", "noopener,noreferrer")}
+          {schedule.length ? (
+            <div className="space-y-3">
+              {schedule.map((item) => <ScheduleItem key={item.id} item={item} user={user} />)}
+            </div>
+          ) : (
+            <div className="rounded-xl bg-slate-50 py-10 text-center">
+              <IcCalendar />
+              <p className="mt-2 text-sm text-slate-500">No upcoming sessions</p>
+            </div>
+          )}
+        </section>
+
+        {/* Leaderboard */}
+        <section className="rounded-2xl bg-brand-ink p-6 text-white shadow-panel">
+          <div className="mb-1 flex items-center gap-2">
+            <IcLeader />
+            <h2 className="text-base font-extrabold">Leaderboard</h2>
+          </div>
+          <p className="mb-5 text-xs text-white/50">Top performers this month</p>
+          {leaderboard.length ? (
+            <div className="space-y-2.5">
+              {leaderboard.slice(0, 5).map((item, i) => {
+                const isMe = item.email === user?.email;
+                const medals = ["🥇", "🥈", "🥉"];
+                return (
+                  <div
+                    key={item.learner || item.email}
+                    className={`flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
+                      isMe ? "bg-brand-primary" : "bg-white/8 hover:bg-white/12"
+                    }`}
                   >
-                    Join Live Class
-                  </button>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[0.95fr,1.05fr]">
-        <div className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
-          <h2 className="font-display text-2xl">Public Q&A</h2>
-          <p className="mt-2 text-sm text-slate-500">Ask a question and browse answered ones.</p>
-          <select className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3" value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
-            <option value="">General question</option>
-            {enrollments.map((enrollment) => (
-              <option key={enrollment._id} value={enrollment.course?._id}>{enrollment.course?.title}</option>
-            ))}
-          </select>
-          <textarea className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3" rows="4" placeholder="Ask your question here" value={question} onChange={(e) => setQuestion(e.target.value)} />
-          <button className="mt-4 rounded-2xl bg-teal-700 px-4 py-3 text-sm font-medium text-white transition hover:bg-teal-800" onClick={submitQuestion}>
-            Submit Question
-          </button>
-          <input className="mt-6 w-full rounded-2xl border border-slate-200 px-4 py-3" placeholder="Search answered questions" value={search} onChange={(e) => setSearch(e.target.value)} />
-          <div className="mt-4 space-y-3">
-            {filteredQuestions.length === 0 ? (
-              <p className="py-4 text-center text-sm text-slate-400">No questions match your search.</p>
-            ) : (
-              filteredQuestions.map((item) => (
-                <details key={item._id} className="rounded-2xl border border-slate-100 p-4 transition hover:bg-slate-50">
-                  <summary className="cursor-pointer font-medium text-slate-900">{item.question}</summary>
-                  <p className="mt-3 text-sm text-slate-500">{item.answer || "Awaiting an answer..."}</p>
-                </details>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="animate-fadeIn rounded-[28px] bg-white p-6 shadow-panel">
-          <h2 className="font-display text-2xl">Course Reviews</h2>
-          <div className="mt-5 space-y-6">
-            {enrollments.map((enrollment) => {
-              const courseId = enrollment.course?._id;
-              const courseReviews = reviews.filter((review) => review.course?._id === courseId);
-              const ownReview = courseReviews.find((review) => review.learner?._id === user._id);
-              const form = reviewForms[courseId] || {
-                rating: ownReview?.rating || 5,
-                comment: ownReview?.comment || ""
-              };
-
-              return (
-                <div key={enrollment._id} className="rounded-3xl border border-slate-100 p-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold">{enrollment.course?.title}</h3>
-                      <p className="mt-1 text-sm text-slate-500">Average rating: {average(courseReviews.map((review) => review.rating))}</p>
+                    <span className="w-6 text-center text-sm font-bold">
+                      {medals[i] ?? <span className="text-white/50">{i + 1}</span>}
+                    </span>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-bold">
+                      {(item.name || "?").slice(0, 2).toUpperCase()}
                     </div>
-                    <Stars
-                      rating={form.rating}
-                      onChange={(value) =>
-                        setReviewForms({
-                          ...reviewForms,
-                          [courseId]: { ...form, rating: value }
-                        })
-                      }
-                    />
+                    <p className="flex-1 truncate text-sm font-semibold">
+                      {isMe ? `${item.name} (You)` : item.name}
+                    </p>
+                    <span className="text-sm font-bold text-yellow-300">
+                      {item.avgScore ?? item.accuracy ?? 0}
+                    </span>
                   </div>
-                  <textarea
-                    rows="3"
-                    className="mt-4 w-full rounded-2xl border border-slate-200 px-4 py-3"
-                    placeholder="Share your learning experience"
-                    value={form.comment}
-                    onChange={(e) =>
-                      setReviewForms({
-                        ...reviewForms,
-                        [courseId]: { ...form, comment: e.target.value }
-                      })
-                    }
-                  />
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800" onClick={() => submitReview(courseId, ownReview)}>
-                      {ownReview ? "Update Review" : "Submit Review"}
-                    </button>
-                    {ownReview ? (
-                      <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-50" onClick={() => deleteReview(ownReview._id)}>
-                        Delete Review
-                      </button>
-                    ) : null}
-                  </div>
-                  <div className="mt-4 space-y-3">
-                    {courseReviews.map((review) => (
-                      <div key={review._id} className="rounded-2xl bg-slate-50 p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <p className="font-medium">{review.learner?.name}</p>
-                          <Stars rating={review.rating} readonly />
-                        </div>
-                        <p className="mt-2 text-sm text-slate-500">{review.comment}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          ) : (
+            <p className="rounded-xl bg-white/10 p-4 text-center text-xs text-white/60">
+              Leaderboard populates after test attempts.
+            </p>
+          )}
+          <Link
+            to="/learner/exam/leaderboards"
+            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 text-sm font-bold text-white transition hover:bg-white/20"
+          >
+            View All Rankings →
+          </Link>
+        </section>
+      </div>
+    </div>
+  );
+};
+
+/* ── Recommended Course Card ─────────────────────────────────────────── */
+const RecommendedCard = ({ course, onEnroll }) => {
+  const isFree = course.pricing?.type === "free" || !(course.pricing?.amount > 0);
+  const price  = isFree
+    ? "Free"
+    : `${course.pricing?.currency || "₹"}${course.pricing?.amount}`;
+  return (
+    <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-cardHover transition-shadow">
+      <div className="relative h-44">
+        <CourseThumbnail
+          title={course.title}
+          thumbnail={course.thumbnail}
+          className="h-full"
+
+          zoom
+        />
+        <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-brand-primary shadow-sm backdrop-blur-sm">
+          {course.examPattern || "Course"}
+        </span>
+      </div>
+      <div className="p-5">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+          {course.instructorDisplayName || course.instructor?.name || "Faculty"}
+        </p>
+        <h3 className="mt-1 line-clamp-2 text-sm font-extrabold text-brand-ink leading-snug">{course.title}</h3>
+        <div className="mt-3 flex items-center gap-1">
+          {[1,2,3,4,5].map((s) => <IcStar key={s} filled={s <= 4} />)}
+          <span className="ml-1 text-[11px] text-slate-500">4.0</span>
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <p className="text-lg font-extrabold text-brand-primary">{price}</p>
+          <button
+            onClick={() => onEnroll(course._id)}
+            className="rounded-lg bg-brand-cta px-4 py-1.5 text-xs font-bold text-white hover:opacity-90 transition"
+          >
+            Enroll Now
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+};
+
+/* ── Enrolled Batch Card ─────────────────────────────────────────────── */
+const EnrolledCard = ({ enrollment }) => {
+  const course = enrollment.course;
+  const pct    = Math.min(100, enrollment.progress || 0);
+  return (
+    <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-cardHover transition-shadow">
+      <div className="relative h-44">
+        <CourseThumbnail
+          title={course?.title}
+          thumbnail={course?.thumbnail}
+          className="h-full"
+          zoom
+        />
+      </div>
+      <div className="p-5">
+        <h3 className="line-clamp-2 text-sm font-extrabold text-brand-ink leading-snug">{course?.title || "Course"}</h3>
+        <div className="mt-3">
+          <div className="mb-1 flex justify-between text-[11px] text-slate-500">
+            <span>Progress</span><span className="font-bold text-brand-primary">{pct}%</span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-full rounded-full bg-brand-primary transition-all" style={{ width: `${pct}%` }} />
           </div>
         </div>
-      </section>
-    </div>
+        <Link
+          to={`/learner/courses/${enrollment._id}`}
+          className="mt-4 block rounded-xl bg-brand-primary py-2 text-center text-xs font-bold text-white hover:bg-brand-ink transition"
+        >
+          Continue Learning →
+        </Link>
+      </div>
+    </article>
   );
 };
 

@@ -31,13 +31,15 @@ export const navigationByRole = {
     { label: "Notifications",to: "/instructor/notifications",     icon: "bell"       }
   ],
   learner: [
-    { label: "My Courses", to: "/learner", icon: "courses" },
-    { label: "My Batch", to: "/learner/batches", icon: "batch" },
-    { label: "Exam Cracker", to: "/learner/exam", icon: "tests" },
-    { label: "Leaderboards", to: "/learner/exam/leaderboards", icon: "leaderboard" },
-    { label: "Doubt Vault", to: "/learner/doubts", icon: "doubts" },
-    { label: "Attendance", to: "/learner/attendance", icon: "attendance" },
-    { label: "Notifications", to: "/learner/notifications", icon: "bell" }
+    { label: "Dashboard",       to: "/learner",                    icon: "dashboard"   },
+    { label: "My Courses",      to: "/learner/courses",            icon: "courses"     },
+    { label: "My Batch",        to: "/learner/batches",            icon: "batch"       },
+    { label: "Study Materials", to: "/learner/study-materials",    icon: "resources"   },
+    { label: "Mock Tests",      to: "/learner/exam",               icon: "tests"       },
+    { label: "Doubts",          to: "/learner/doubts",             icon: "doubts"      },
+    { label: "Leaderboard",     to: "/learner/exam/leaderboards",  icon: "leaderboard" },
+    { label: "Attendance",      to: "/learner/attendance",         icon: "attendance"  },
+    { label: "Notifications",   to: "/learner/notifications",      icon: "bell"        }
   ],
   parent: [
     { label: "Trust Center", to: "/parent", icon: "dashboard" },

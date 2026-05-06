@@ -15,7 +15,8 @@ const batchSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "archived"],
       default: "active"
-    }
+    },
+    syllabusProgress: { type: Number, default: 0, min: 0, max: 100 }
   },
   { timestamps: true }
 );

@@ -6,7 +6,8 @@ import {
   getMigrationRequests,
   requestMigration,
   reviewMigrationRequest,
-  updateBatch
+  updateBatch,
+  updateSyllabusProgress
 } from "../controllers/batchController.js";
 import { authorize, protect } from "../middleware/authMiddleware.js";
 
@@ -23,5 +24,6 @@ router.post("/migrations", protect, authorize("admin", "instructor"), requestMig
 router.put("/migrations/:id/review", protect, authorize("admin"), reviewMigrationRequest);
 
 router.put("/:id", protect, authorize("admin"), updateBatch);
+router.patch("/:id/syllabus", protect, authorize("admin", "instructor"), updateSyllabusProgress);
 
 export default router;

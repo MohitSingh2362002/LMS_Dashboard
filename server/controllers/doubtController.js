@@ -66,6 +66,8 @@ export const getDoubts = asyncHandler(async (req, res) => {
 });
 
 export const createDoubt = asyncHandler(async (req, res) => {
+  const audioFile = req.files?.audio?.[0] || null;
+  const imageFile = req.files?.image?.[0] || null;
   const assignment = await resolveAssignment({
     learnerId: req.user._id,
     courseId: req.body.course || null,
@@ -81,11 +83,18 @@ export const createDoubt = asyncHandler(async (req, res) => {
     chapter: req.body.chapter || "",
     topic: req.body.topic || "",
     question: req.body.question,
-    audio: req.file
+    audio: audioFile
       ? {
-          name: req.file.originalname,
-          path: `/uploads/${req.file.filename}`,
-          size: req.file.size || 0
+          name: audioFile.originalname,
+          path: `/uploads/${audioFile.filename}`,
+          size: audioFile.size || 0
+        }
+      : undefined,
+    image: imageFile
+      ? {
+          name: imageFile.originalname,
+          path: `/uploads/${imageFile.filename}`,
+          size: imageFile.size || 0
         }
       : undefined
   });

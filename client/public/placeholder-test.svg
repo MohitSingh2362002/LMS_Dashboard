@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0F2C5A"/>
+      <stop offset="100%" style="stop-color:#1A4FA0"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B"/>
+      <stop offset="100%" style="stop-color:#F0A500"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#00000040"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)"/>
+
+  <!-- Subtle grid lines -->
+  <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="0.4" opacity="0.08"/>
+  </pattern>
+  <rect width="800" height="450" fill="url(#grid)"/>
+
+  <!-- Glow circle behind clipboard -->
+  <circle cx="400" cy="210" r="130" fill="#2E7FD9" opacity="0.18"/>
+
+  <!-- Clipboard / answer sheet -->
+  <g filter="url(#shadow)">
+    <rect x="300" y="105" width="200" height="240" rx="10" fill="white" opacity="0.95"/>
+    <rect x="360" y="95" width="80" height="24" rx="6" fill="#CBD5E1"/>
+    <rect x="370" y="98" width="60" height="18" rx="4" fill="#94A3B8"/>
+    <circle cx="400" cy="107" r="7" fill="#64748B"/>
+
+    <!-- Q1 correct -->
+    <rect x="326" y="149" width="12" height="12" rx="3" fill="#1A4FA0" opacity="0.9"/>
+    <rect x="346" y="151" width="90" height="8" rx="4" fill="#CBD5E1"/>
+    <circle cx="456" cy="155" r="7" fill="#10B981" opacity="0.85"/>
+    <path d="M452 155 L455 158 L461 151" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Q2 wrong -->
+    <rect x="326" y="175" width="12" height="12" rx="3" fill="#1A4FA0" opacity="0.9"/>
+    <rect x="346" y="177" width="110" height="8" rx="4" fill="#CBD5E1"/>
+    <circle cx="476" cy="181" r="7" fill="#EF4444" opacity="0.85"/>
+    <line x1="472" y1="177" x2="480" y2="185" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <line x1="480" y1="177" x2="472" y2="185" stroke="white" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Q3 correct -->
+    <rect x="326" y="201" width="12" height="12" rx="3" fill="#1A4FA0" opacity="0.9"/>
+    <rect x="346" y="203" width="75" height="8" rx="4" fill="#CBD5E1"/>
+    <circle cx="441" cy="207" r="7" fill="#10B981" opacity="0.85"/>
+    <path d="M437 207 L440 210 L446 203" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Q4 correct -->
+    <rect x="326" y="227" width="12" height="12" rx="3" fill="#1A4FA0" opacity="0.9"/>
+    <rect x="346" y="229" width="100" height="8" rx="4" fill="#CBD5E1"/>
+    <circle cx="466" cy="233" r="7" fill="#10B981" opacity="0.85"/>
+    <path d="M462 233 L465 236 L471 229" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- Q5 wrong -->
+    <rect x="326" y="253" width="12" height="12" rx="3" fill="#1A4FA0" opacity="0.9"/>
+    <rect x="346" y="255" width="85" height="8" rx="4" fill="#CBD5E1"/>
+    <circle cx="451" cy="259" r="7" fill="#EF4444" opacity="0.85"/>
+    <line x1="447" y1="255" x2="455" y2="263" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <line x1="455" y1="255" x2="447" y2="263" stroke="white" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Score box -->
+    <rect x="320" y="281" width="160" height="44" rx="8" fill="#EAF3FC"/>
+    <rect x="328" y="289" width="70" height="8" rx="4" fill="#2E7FD9" opacity="0.35"/>
+    <rect x="328" y="303" width="40" height="7" rx="3.5" fill="#2E7FD9" opacity="0.22"/>
+    <rect x="420" y="285" width="50" height="32" rx="6" fill="#1A4FA0"/>
+    <text x="445" y="307" text-anchor="middle" font-size="15" font-weight="800" font-family="Arial,sans-serif" fill="white">80%</text>
+  </g>
+
+  <!-- Clock (top-right) -->
+  <g transform="translate(598, 138)" filter="url(#glow)" opacity="0.88">
+    <circle cx="0" cy="0" r="44" fill="none" stroke="url(#amber)" stroke-width="5"/>
+    <circle cx="0" cy="0" r="38" fill="#F59E0B" opacity="0.10"/>
+    <line x1="0" y1="0" x2="0" y2="-24" stroke="white" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="18" y2="10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="0" cy="0" r="4" fill="white"/>
+    <line x1="0" y1="-38" x2="0" y2="-31" stroke="white" stroke-width="2.5" opacity="0.65"/>
+    <line x1="38" y1="0" x2="31" y2="0" stroke="white" stroke-width="2" opacity="0.45"/>
+    <line x1="0" y1="38" x2="0" y2="31" stroke="white" stroke-width="2" opacity="0.45"/>
+    <line x1="-38" y1="0" x2="-31" y2="0" stroke="white" stroke-width="2" opacity="0.45"/>
+  </g>
+
+  <!-- Pencil (bottom-left) -->
+  <g transform="translate(150, 285) rotate(-32)" opacity="0.72">
+    <rect x="-8" y="-62" width="16" height="72" rx="3" fill="#F59E0B"/>
+    <polygon points="-8,10 8,10 0,28" fill="#FDE68A"/>
+    <rect x="-8" y="-72" width="16" height="14" rx="2" fill="#94A3B8"/>
+    <line x1="-8" y1="-58" x2="8" y2="-58" stroke="white" stroke-width="1.5" opacity="0.35"/>
+    <line x1="0" y1="10" x2="0" y2="22" stroke="#D97706" stroke-width="1.5"/>
+  </g>
+
+  <!-- Sparkles -->
+  <polygon points="118,128 121,139 132,139 123,146 126,157 118,150 110,157 113,146 104,139 115,139" fill="white" opacity="0.4"/>
+  <polygon points="658,295 660,301 666,301 661,305 663,311 658,307 653,311 655,305 650,301 656,301" fill="#F59E0B" opacity="0.55"/>
+  <circle cx="682" cy="142" r="3" fill="white" opacity="0.38"/>
+  <circle cx="128" cy="352" r="2.5" fill="white" opacity="0.32"/>
+  <circle cx="695" cy="375" r="2" fill="#F59E0B" opacity="0.4"/>
+
+  <!-- Bottom band -->
+  <rect x="0" y="383" width="800" height="67" fill="black" opacity="0.2"/>
+  <rect x="40" y="399" width="130" height="10" rx="5" fill="white" opacity="0.42"/>
+  <rect x="40" y="415" width="80" height="8" rx="4" fill="white" opacity="0.26"/>
+  <rect x="656" y="396" width="108" height="28" rx="14" fill="url(#amber)" opacity="0.92"/>
+  <text x="710" y="415" text-anchor="middle" font-size="11" font-weight="700" font-family="Arial,sans-serif" fill="#1C1E2B">MOCK TEST</text>
+</svg>

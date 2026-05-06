@@ -181,7 +181,9 @@ const AppShell = () => {
   const portalLabel =
     user.role === "admin"
       ? { brand: "EduAdmin", subtitle: "LMS Portal" }
-      : { brand: "LMS Studio", subtitle: `${user.role} portal` };
+      : user.role === "learner"
+        ? { brand: "EduMaster LMS", subtitle: "Learner Portal" }
+        : { brand: "LMS Studio", subtitle: `${user.role} portal` };
 
   const unreadCount = notifications.length;
 
@@ -290,7 +292,7 @@ const AppShell = () => {
                   <circle cx="11" cy="11" r="8" />
                   <path d="M21 21l-4.35-4.35" />
                 </svg>
-                <span className="text-left">Search for pages, courses, users…</span>
+                <span className="text-left">{user.role === "learner" ? "Search courses, tests..." : "Search for pages, courses, users…"}</span>
                 <kbd className="ml-auto hidden rounded border border-slate-200 px-1.5 py-0.5 text-[10px] sm:block">⌘K</kbd>
               </button>
 
@@ -310,22 +312,27 @@ const AppShell = () => {
                   {unreadCount === 0 && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-brand-cta" />}
                 </button>
 
-                {/* Support link */}
-                <a
-                  href="mailto:support@lms.edu"
-                  className="hidden rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-brand-ink transition hover:bg-slate-50 sm:block"
-                >
-                  Support
-                </a>
-
-                {/* Quick Action */}
-                <button
-                  type="button"
-                  onClick={() => { setShowQuickAction((v) => !v); setShowNotifications(false); }}
-                  className="rounded-lg bg-brand-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
-                >
-                  Quick Action
-                </button>
+                {user.role === "learner" ? (
+                  <span className="hidden rounded-full bg-slate-100 px-4 py-2 text-sm font-bold text-brand-ink sm:inline-flex">
+                    {notifications.length * 5 + 40} XP
+                  </span>
+                ) : (
+                  <>
+                    <a
+                      href="mailto:support@lms.edu"
+                      className="hidden rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-brand-ink transition hover:bg-slate-50 sm:block"
+                    >
+                      Support
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => { setShowQuickAction((v) => !v); setShowNotifications(false); }}
+                      className="rounded-lg bg-brand-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+                    >
+                      Quick Action
+                    </button>
+                  </>
+                )}
 
                 {/* User avatar */}
                 <div className="flex items-center gap-2">

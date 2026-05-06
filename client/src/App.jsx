@@ -37,6 +37,8 @@ import ExamAttemptPage from "./pages/learner/ExamAttemptPage";
 import ExamResultPage from "./pages/learner/ExamResultPage";
 import ExamLeaderboardPage from "./pages/learner/ExamLeaderboardPage";
 import LearnerDoubtVaultPage from "./pages/learner/LearnerDoubtVaultPage";
+import LearnerMyCoursesPage from "./pages/learner/LearnerMyCoursesPage";
+import LearnerStudyMaterialsPage from "./pages/learner/LearnerStudyMaterialsPage";
 import ParentDashboardPage from "./pages/parent/ParentDashboardPage";
 import ParentReportsPage from "./pages/parent/ParentReportsPage";
 import ParentBatchesPage from "./pages/parent/ParentBatchesPage";
@@ -136,6 +138,8 @@ function App() {
         <Route path="exam/tests/:testId" element={<ExamAttemptPage />} />
         <Route path="exam/results/:attemptId" element={<ExamResultPage />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
+        <Route path="courses" element={<LearnerMyCoursesPage />} />
+        <Route path="study-materials" element={<LearnerStudyMaterialsPage />} />
         <Route path="doubts" element={<LearnerDoubtVaultPage />} />
         <Route path="attendance" element={<AttendanceViewPage />} />
         <Route path="notifications" element={<NotificationsPage />} />

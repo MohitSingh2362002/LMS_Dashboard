@@ -239,7 +239,7 @@ export const getMockTests = asyncHandler(async (req, res) => {
   }
 
   const tests = await MockTest.find(filter)
-    .populate("course", "title")
+    .populate("course", "title thumbnail pricing instructorDisplayName")
     .populate("batch", "name performanceGroup")
     .populate("questions", "subject chapter topic marks")
     .sort({ updatedAt: -1 });

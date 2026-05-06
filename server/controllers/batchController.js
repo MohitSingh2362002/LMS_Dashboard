@@ -106,6 +106,32 @@ export const updateBatch = asyncHandler(async (req, res) => {
   res.json(populated);
 });
 
+export const updateSyllabusProgress = asyncHandler(async (req, res) => {
+  const batch = await Batch.findById(req.params.id);
+
+  if (!batch) {
+    res.status(404);
+    throw new Error("Batch not found");
+  }
+
+  if (!canManageBatch(req.user, batch)) {
+    res.status(403);
+    throw new Error("Forbidden — you are not the mentor of this batch");
+  }
+
+  const value = Number(req.body.syllabusProgress);
+  if (Number.isNaN(value) || value < 0 || value > 100) {
+    res.status(400);
+    throw new Error("syllabusProgress must be a number between 0 and 100");
+  }
+
+  batch.syllabusProgress = Math.round(value);
+  await batch.save();
+
+  const populated = await populateBatch(Batch.findById(batch._id));
+  res.json(populated);
+});
+
 export const requestMigration = asyncHandler(async (req, res) => {
   const { learner, fromBatch, toBatch, reason = "" } = req.body;
   const [source, destination] = await Promise.all([
