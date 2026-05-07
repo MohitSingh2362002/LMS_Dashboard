@@ -31,6 +31,14 @@ export const getMyEnrollments = asyncHandler(async (req, res) => {
   res.json(enrollments);
 });
 
+// Admin: get learner IDs enrolled in a specific course
+export const getLearnersByCourse = asyncHandler(async (req, res) => {
+  const { courseId } = req.params;
+  const enrollments = await Enrollment.find({ course: courseId }).select("learner");
+  const learnerIds = enrollments.map((e) => String(e.learner));
+  res.json(learnerIds);
+});
+
 export const updateProgress = asyncHandler(async (req, res) => {
   const enrollment = await Enrollment.findById(req.params.id).populate("course");
 

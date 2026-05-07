@@ -15,7 +15,9 @@ const emptyForm = {
   durationMinutes: 180,
   status: "draft",
   startsAt: "",
-  endsAt: ""
+  endsAt: "",
+  pricingType: "free",
+  price: 0
 };
 
 const STATUS_BADGE = {
@@ -42,7 +44,9 @@ const EditModal = ({ test, batches, courses, onClose, onSaved }) => {
     batch: test.batch?._id || test.batch || "",
     course: test.course?._id || test.course || "",
     startsAt: test.startsAt ? new Date(test.startsAt).toISOString().slice(0, 16) : "",
-    endsAt: test.endsAt ? new Date(test.endsAt).toISOString().slice(0, 16) : ""
+    endsAt: test.endsAt ? new Date(test.endsAt).toISOString().slice(0, 16) : "",
+    pricingType: test.pricingType || "free",
+    price: test.price || 0
   });
 
   const save = async (e) => {
@@ -95,9 +99,45 @@ const EditModal = ({ test, batches, courses, onClose, onSaved }) => {
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-brand-ink">Duration (Minutes)</label>
-            <input type="number" min="1" value={form.durationMinutes}
-              onChange={(e) => setForm({ ...form, durationMinutes: +e.target.value })}
+            <input
+              type="number" min="1"
+              value={form.durationMinutes}
+              onFocus={(e) => e.target.select()}
+              onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value, 10) || 1 })}
               className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
+          </div>
+          {/* Pricing */}
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-brand-ink">Pricing</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, pricingType: "free", price: 0 })}
+                className={`flex-1 rounded-lg border py-2 text-xs font-bold transition ${form.pricingType === "free" ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}
+              >
+                Free
+              </button>
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, pricingType: "paid" })}
+                className={`flex-1 rounded-lg border py-2 text-xs font-bold transition ${form.pricingType === "paid" ? "border-brand-primary bg-brand-surface text-brand-primary" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}
+              >
+                Paid
+              </button>
+            </div>
+            {form.pricingType === "paid" && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="text-sm font-semibold text-slate-500">₹</span>
+                <input
+                  type="number" min="0"
+                  value={form.price}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setForm({ ...form, price: parseInt(e.target.value, 10) || 0 })}
+                  placeholder="Enter price"
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-brand-accent focus:bg-white focus:outline-none"
+                />
+              </div>
+            )}
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-brand-ink">Batch Restriction</label>
@@ -327,9 +367,47 @@ const MockTestsPage = () => {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-brand-ink">Duration (Min)</label>
-                <input type="number" min="1" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: +e.target.value })}
+                <input
+                  type="number" min="1"
+                  value={form.durationMinutes}
+                  onFocus={(e) => e.target.select()}
+                  onChange={(e) => setForm({ ...form, durationMinutes: parseInt(e.target.value, 10) || 1 })}
                   className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm" />
               </div>
+            </div>
+
+            {/* Pricing */}
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-brand-ink">Pricing</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, pricingType: "free", price: 0 })}
+                  className={`flex-1 rounded-lg border py-2 text-xs font-bold transition ${form.pricingType === "free" ? "border-emerald-400 bg-emerald-50 text-emerald-700" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}
+                >
+                  Free
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, pricingType: "paid" })}
+                  className={`flex-1 rounded-lg border py-2 text-xs font-bold transition ${form.pricingType === "paid" ? "border-brand-primary bg-brand-surface text-brand-primary" : "border-slate-200 text-slate-500 hover:bg-slate-50"}`}
+                >
+                  Paid
+                </button>
+              </div>
+              {form.pricingType === "paid" && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm font-semibold text-slate-500">₹</span>
+                  <input
+                    type="number" min="0"
+                    value={form.price}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => setForm({ ...form, price: parseInt(e.target.value, 10) || 0 })}
+                    placeholder="Enter price"
+                    className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm focus:border-brand-accent focus:bg-white focus:outline-none"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -419,7 +497,7 @@ const MockTestsPage = () => {
                     {/* Thumbnail */}
                     <div className="h-20 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-brand-accent to-brand-primary">
                       {test.thumbnail ? (
-                        <img src={getFullImageUrl(test.thumbnail)} alt={test.title} className="h-full w-full object-cover" />
+                        <img src={getFullImageUrl(test.thumbnail)} alt={test.title} className="h-full w-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = "none"; }} />
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-8 w-8 opacity-70"><path d="M9 11l3 3 8-8M5 12v6a2 2 0 002 2h10a2 2 0 002-2v-2" /></svg>
@@ -432,6 +510,13 @@ const MockTestsPage = () => {
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${tagClass}`}>{test.examPattern}</span>
                           <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${badgeClass}`}>{test.status}</span>
+                          {test.pricingType === "paid" ? (
+                            <span className="rounded bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-700">
+                              PAID {test.price ? `· ₹${test.price}` : ""}
+                            </span>
+                          ) : (
+                            <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">FREE</span>
+                          )}
                         </div>
                         <p className="mt-1.5 text-sm font-bold text-brand-ink">{test.title}</p>
                         <div className="mt-1.5 flex flex-wrap gap-3 text-[11px] text-slate-500">

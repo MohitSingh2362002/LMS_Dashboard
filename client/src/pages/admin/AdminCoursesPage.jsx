@@ -90,6 +90,16 @@ const AdminCoursesPage = () => {
     catch (e) { toast.error(e.response?.data?.message || "Duplicate failed"); }
   };
 
+  const archiveCourse = async (course) => {
+    const newStatus = course.status === "archived" ? "published" : "archived";
+    const label = newStatus === "archived" ? "archived" : "restored";
+    try {
+      await api.put(`/courses/${course._id}`, { status: newStatus });
+      toast.success(`Course ${label}`);
+      refresh();
+    } catch (e) { toast.error(e.response?.data?.message || "Failed"); }
+  };
+
   if (loading) return <Loader label="Loading courses..." />;
 
   return (
@@ -170,7 +180,12 @@ const AdminCoursesPage = () => {
               <article key={course._id} className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition-all hover:shadow-cardHover">
                 <div className="relative h-32 bg-gradient-to-br from-brand-accent to-brand-primary">
                   {course.thumbnail ? (
-                    <img src={getFullImageUrl(course.thumbnail)} alt={course.title} className="h-full w-full object-cover" />
+                    <img
+                      src={getFullImageUrl(course.thumbnail)}
+                      alt={course.title}
+                      className="h-full w-full object-cover"
+                      onError={(e) => { e.target.onerror = null; e.target.style.display = "none"; }}
+                    />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-12 w-12 opacity-70"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
@@ -205,6 +220,12 @@ const AdminCoursesPage = () => {
                   <div className="mt-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50" onClick={() => { setEditing(course); setOpen(true); }}>Edit</button>
                     <button className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50" onClick={() => duplicateCourse(course._id)}>Duplicate</button>
+                    <button
+                      className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${course.status === "archived" ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50" : "border-amber-200 text-amber-600 hover:bg-amber-50"}`}
+                      onClick={() => archiveCourse(course)}
+                    >
+                      {course.status === "archived" ? "Restore" : "Archive"}
+                    </button>
                     <button className="rounded-md border border-rose-200 px-2 py-1 text-[11px] font-medium text-rose-600 hover:bg-rose-50" onClick={() => removeCourse(course._id)}>Delete</button>
                   </div>
                 </div>

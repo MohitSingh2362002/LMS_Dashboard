@@ -19,7 +19,9 @@ const mockTestSchema = new mongoose.Schema(
       enum: ["draft", "published", "archived", "scheduled"],
       default: "draft"
     },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    pricingType: { type: String, enum: ["free", "paid"], default: "free" },
+    price: { type: Number, default: 0, min: 0 }
   },
   { timestamps: true }
 );

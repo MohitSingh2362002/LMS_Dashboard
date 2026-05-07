@@ -270,6 +270,8 @@ export const createMockTest = asyncHandler(async (req, res) => {
     startsAt: req.body.startsAt || null,
     endsAt: req.body.endsAt || null,
     status: req.body.status || "draft",
+    pricingType: req.body.pricingType || "free",
+    price: Number(req.body.price) || 0,
     createdBy: req.user._id
   });
 
@@ -288,7 +290,7 @@ export const updateMockTest = asyncHandler(async (req, res) => {
     throw new Error("Mock test not found");
   }
 
-  const allowed = ["title", "examPattern", "status", "durationMinutes", "batch", "course", "startsAt", "endsAt"];
+  const allowed = ["title", "examPattern", "status", "durationMinutes", "batch", "course", "startsAt", "endsAt", "pricingType", "price"];
   allowed.forEach((field) => {
     if (req.body[field] !== undefined) {
       test[field] = req.body[field] === "" ? null : req.body[field];

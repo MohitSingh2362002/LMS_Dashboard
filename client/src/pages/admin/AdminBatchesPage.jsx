@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import api from "../../api/client";
 import EmptyState from "../../components/EmptyState";
@@ -37,7 +37,7 @@ const BatchDetailModal = ({ batch, onClose, onEdit }) => {
           <div className="flex items-center gap-2">
             <h3 className="text-base font-bold text-brand-ink">{batch.name}</h3>
             <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${trackClass}`}>{batch.performanceGroup}</span>
-            <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase text-emerald-700">{batch.status}</span>
+            <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase ${batch.status === "archived" ? "bg-slate-100 text-slate-600" : "bg-emerald-100 text-emerald-700"}`}>{batch.status}</span>
           </div>
           <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><path d="M18 6L6 18M6 6l12 12" /></svg>
@@ -103,6 +103,7 @@ const AdminBatchesPage = () => {
   const [viewingBatch, setViewingBatch] = useState(null);
   const [filters, setFilters] = useState({ status: "active", performanceGroup: "" });
   const [learnerSearch, setLearnerSearch] = useState("");
+  const [enrolledLearnerIds, setEnrolledLearnerIds] = useState(null); // null = no filter
 
   const query = new URLSearchParams(
     Object.entries(filters).filter(([, v]) => Boolean(v))
@@ -113,13 +114,31 @@ const AdminBatchesPage = () => {
   const { data: users, loading: lu } = useFetch(() => api.get("/users"), []);
 
   const instructors = useMemo(() => users.filter((u) => u.role === "instructor"), [users]);
-  const learners = useMemo(() => users.filter((u) => u.role === "learner"), [users]);
+  const allLearners = useMemo(() => users.filter((u) => u.role === "learner"), [users]);
+
+  // When course changes in form, fetch enrolled learners for that course
+  useEffect(() => {
+    if (!form.course) {
+      setEnrolledLearnerIds(null);
+      return;
+    }
+    api.get(`/enrollments/course/${form.course}`)
+      .then(({ data }) => setEnrolledLearnerIds(Array.isArray(data) ? data : []))
+      .catch(() => setEnrolledLearnerIds(null));
+  }, [form.course]);
+
+  // Learners visible in form — filtered by course enrollment if course selected
+  const courseLearners = useMemo(() => {
+    if (!enrolledLearnerIds) return allLearners; // no course selected → show all
+    return allLearners.filter((l) => enrolledLearnerIds.includes(l._id));
+  }, [allLearners, enrolledLearnerIds]);
+
   const filteredLearners = useMemo(
-    () => learners.filter((l) => `${l.name} ${l.email}`.toLowerCase().includes(learnerSearch.toLowerCase())),
-    [learners, learnerSearch]
+    () => courseLearners.filter((l) => `${l.name} ${l.email}`.toLowerCase().includes(learnerSearch.toLowerCase())),
+    [courseLearners, learnerSearch]
   );
 
-  const resetForm = () => { setForm(emptyForm); setEditingId(""); setLearnerSearch(""); };
+  const resetForm = () => { setForm(emptyForm); setEditingId(""); setLearnerSearch(""); setEnrolledLearnerIds(null); };
 
   const startEdit = (b) => {
     setEditingId(b._id);
@@ -144,6 +163,17 @@ const AdminBatchesPage = () => {
   const toggleLearner = (id) => {
     const exists = form.learners.includes(id);
     setForm({ ...form, learners: exists ? form.learners.filter((x) => x !== id) : [...form.learners, id] });
+  };
+
+  const toggleArchive = async (b) => {
+    const newStatus = b.status === "archived" ? "active" : "archived";
+    try {
+      await api.put(`/batches/${b._id}`, { status: newStatus });
+      toast.success(newStatus === "archived" ? "Batch archived" : "Batch restored");
+      refresh();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update status");
+    }
   };
 
   if (lb || lc || lu) return <Loader label="Loading batches..." />;
@@ -179,9 +209,12 @@ const AdminBatchesPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Select Course</label>
-                <select value={form.course} onChange={(e) => setForm({ ...form, course: e.target.value })} required
+                <select
+                  value={form.course}
+                  onChange={(e) => setForm({ ...form, course: e.target.value, learners: [] })}
+                  required
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm">
-                  <option value="">Computer Science</option>
+                  <option value="">Select a course…</option>
                   {courses.map((c) => <option key={c._id} value={c._id}>{c.title}</option>)}
                 </select>
               </div>
@@ -189,7 +222,7 @@ const AdminBatchesPage = () => {
                 <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Select Mentor</label>
                 <select value={form.mentor} onChange={(e) => setForm({ ...form, mentor: e.target.value })} required
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm">
-                  <option value="">Dr. Sarah Miller</option>
+                  <option value="">Select mentor…</option>
                   {instructors.map((i) => <option key={i._id} value={i._id}>{i.name}</option>)}
                 </select>
               </div>
@@ -198,10 +231,10 @@ const AdminBatchesPage = () => {
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Track</label>
               <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-                {performanceGroups.slice(0, 2).map((g) => (
+                {performanceGroups.map((g) => (
                   <button key={g} type="button"
                     onClick={() => setForm({ ...form, performanceGroup: g })}
-                    className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold capitalize transition ${
+                    className={`flex-1 rounded-md px-2 py-1.5 text-xs font-semibold capitalize transition ${
                       form.performanceGroup === g ? "bg-white text-brand-primary shadow-sm" : "text-slate-500"
                     }`}>
                     {g}
@@ -219,7 +252,19 @@ const AdminBatchesPage = () => {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs font-semibold text-brand-ink">Learner Selection</label>
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-xs font-semibold text-brand-ink">Learner Selection</label>
+                {form.course && (
+                  <span className="text-[10px] text-slate-500">
+                    {enrolledLearnerIds === null
+                      ? "Loading enrolled…"
+                      : enrolledLearnerIds.length === 0
+                        ? "No enrolled learners"
+                        : `${enrolledLearnerIds.length} enrolled in course`}
+                  </span>
+                )}
+                {!form.course && <span className="text-[10px] text-slate-400">Select a course to filter</span>}
+              </div>
               <div className="relative">
                 <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
                 <input value={learnerSearch} onChange={(e) => setLearnerSearch(e.target.value)} placeholder="Search learners..."
@@ -228,7 +273,7 @@ const AdminBatchesPage = () => {
             </div>
 
             <div className="max-h-48 overflow-y-auto rounded-lg border border-slate-100">
-              {filteredLearners.slice(0, 10).map((l) => {
+              {filteredLearners.slice(0, 20).map((l) => {
                 const checked = form.learners.includes(l._id);
                 return (
                   <label key={l._id} className="flex items-center gap-3 border-b border-slate-50 px-3 py-2 last:border-0 hover:bg-slate-50">
@@ -238,12 +283,18 @@ const AdminBatchesPage = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-xs font-semibold text-brand-ink">{l.name}</p>
-                      <p className="truncate text-[10px] text-slate-500">ID: {l._id?.slice(-8).toUpperCase()}</p>
+                      <p className="truncate text-[10px] text-slate-500">{l.email}</p>
                     </div>
                   </label>
                 );
               })}
-              {!filteredLearners.length ? <p className="px-3 py-3 text-xs text-slate-500">No learners found.</p> : null}
+              {!filteredLearners.length && (
+                <p className="px-3 py-3 text-xs text-slate-500">
+                  {form.course && enrolledLearnerIds?.length === 0
+                    ? "No learners enrolled in this course yet."
+                    : "No learners found."}
+                </p>
+              )}
             </div>
           </div>
 
@@ -259,7 +310,7 @@ const AdminBatchesPage = () => {
         <section>
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-baseline gap-3">
-              <h2 className="text-3xl font-bold text-brand-ink">Active Batches</h2>
+              <h2 className="text-3xl font-bold text-brand-ink">Batches</h2>
               <span className="rounded-md bg-brand-ink px-2 py-0.5 text-xs font-bold text-white">{activeBatches.length} TOTAL</span>
             </div>
             <div className="flex gap-2">
@@ -282,12 +333,13 @@ const AdminBatchesPage = () => {
             <div className="space-y-3">
               {activeBatches.map((b) => {
                 const trackClass = TRACK_PILL[b.performanceGroup] || TRACK_PILL.foundation;
+                const isArchived = b.status === "archived";
                 return (
                   <div key={b._id}
-                    className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-card transition-all hover:shadow-cardHover">
+                    className={`rounded-2xl border bg-white p-4 shadow-card transition-all hover:shadow-cardHover ${isArchived ? "border-slate-200 opacity-70" : "border-slate-200/70"}`}>
                     <div className="flex flex-wrap items-start gap-2">
-                      <span className="rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700">
-                        {b.status === "active" ? "Active" : b.status}
+                      <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${isArchived ? "bg-slate-100 text-slate-500" : "bg-emerald-100 text-emerald-700"}`}>
+                        {b.status}
                       </span>
                       <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${trackClass}`}>
                         {b.performanceGroup}
@@ -310,7 +362,27 @@ const AdminBatchesPage = () => {
                         <span className="font-semibold text-brand-ink">{b.learners?.length || 0}</span> Learners
                         <span className="ml-3">Updated {formatDate(b.updatedAt)}</span>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => toggleArchive(b)}
+                          className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition ${
+                            isArchived
+                              ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                              : "border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
+                          }`}
+                        >
+                          {isArchived ? (
+                            <>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
+                              Restore
+                            </>
+                          ) : (
+                            <>
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" /></svg>
+                              Archive
+                            </>
+                          )}
+                        </button>
                         <button onClick={() => { startEdit(b); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                           className="text-xs font-medium text-slate-500 hover:text-brand-ink hover:underline">
                           Edit

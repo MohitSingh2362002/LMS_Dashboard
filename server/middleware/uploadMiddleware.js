@@ -14,9 +14,14 @@ if (!fs.existsSync(uploadDir)) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const base = path.basename(file.originalname, ext).replace(/\s+/g, "-");
-    cb(null, `${Date.now()}-${base}${ext}`);
+    const ext = path.extname(file.originalname).toLowerCase();
+    // strip everything except letters, digits, hyphens → safe URL filename
+    const base = path.basename(file.originalname, ext)
+      .replace(/[^a-zA-Z0-9]/g, "-")   // replace any non-alphanumeric with dash
+      .replace(/-+/g, "-")              // collapse consecutive dashes
+      .replace(/^-|-$/g, "")           // trim leading/trailing dashes
+      .slice(0, 60);                    // keep it short
+    cb(null, `${Date.now()}-${base || "file"}${ext}`);
   }
 });
 
