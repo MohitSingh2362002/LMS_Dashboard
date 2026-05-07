@@ -133,4 +133,9 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 7001;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  const s3Ready = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_S3_BUCKET;
+  console.log(s3Ready
+    ? `☁️  Upload storage: AWS S3 (${process.env.AWS_S3_BUCKET})`
+    : "📁 Upload storage: local disk (set AWS_* env vars to enable S3)"
+  );
 });

@@ -86,14 +86,14 @@ export const createDoubt = asyncHandler(async (req, res) => {
     audio: audioFile
       ? {
           name: audioFile.originalname,
-          path: `/uploads/${audioFile.filename}`,
+          path: audioFile.storedPath || `/uploads/${audioFile.filename}`,
           size: audioFile.size || 0
         }
       : undefined,
     image: imageFile
       ? {
           name: imageFile.originalname,
-          path: `/uploads/${imageFile.filename}`,
+          path: imageFile.storedPath || `/uploads/${imageFile.filename}`,
           size: imageFile.size || 0
         }
       : undefined

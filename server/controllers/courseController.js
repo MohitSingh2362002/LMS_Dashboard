@@ -73,7 +73,7 @@ const sanitizeNoteFiles = (noteFiles = [], fallback = []) => {
 const mapUploadedNoteFiles = (files = []) =>
   files.map((file) => ({
     name: file.originalname,
-    path: `/uploads/${file.filename}`,
+    path: file.storedPath || `/uploads/${file.filename}`,
     size: file.size || 0,
     uploadedAt: new Date()
   }));
@@ -142,7 +142,7 @@ const buildCoursePayload = async (req, existingCourse = null) => {
       current.advancedSettings || defaultAdvancedSettings
     ),
     status: req.body.status ?? current.status ?? "draft",
-    ...(req.file ? { thumbnail: `/uploads/${req.file.filename}` } : {})
+    ...(req.file ? { thumbnail: req.file.storedPath || `/uploads/${req.file.filename}` } : {})
   };
 };
 
