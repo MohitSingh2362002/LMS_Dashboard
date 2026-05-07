@@ -60,13 +60,12 @@ const BatchCard = ({ batch, enrollment, expired, onEnrolled }) => {
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover">
-      {/* Thumbnail */}
+      {/* Thumbnail — prefer batch image, fallback to course image */}
       <div className="relative h-44">
         <CourseThumbnail
           title={course?.title || batch.name}
-          thumbnail={course?.thumbnail}
+          thumbnail={batch.thumbnail || course?.thumbnail}
           className="h-full"
-
           zoom
         />
         {/* Performance group badge */}

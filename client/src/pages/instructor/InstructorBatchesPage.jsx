@@ -261,8 +261,20 @@ const InstructorBatchesPage = () => {
             return (
               <div
                 key={batch._id}
-                className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card hover:shadow-md transition-shadow"
+                className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-md transition-shadow"
               >
+                {/* Batch thumbnail */}
+                {batch.thumbnail && (
+                  <div className="h-32 w-full overflow-hidden bg-slate-100">
+                    <img
+                      src={batch.thumbnail}
+                      alt={batch.name}
+                      className="h-full w-full object-cover"
+                      onError={(e) => { e.target.onerror = null; e.target.parentElement.style.display = "none"; }}
+                    />
+                  </div>
+                )}
+                <div className="p-5">
                 {/* Title */}
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -343,6 +355,7 @@ const InstructorBatchesPage = () => {
                   </svg>
                   Update Progress
                 </button>
+                </div>{/* end p-5 */}
               </div>
             );
           })}

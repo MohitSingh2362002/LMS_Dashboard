@@ -24,32 +24,32 @@ const CODE_COLORS = [
 
 const STATUS_PILL = {
   "On Track": "bg-emerald-100 text-emerald-700",
-  Pending:    "bg-amber-100 text-amber-700",
-  "At Risk":  "bg-rose-100 text-rose-700",
+  Pending: "bg-amber-100 text-amber-700",
+  "At Risk": "bg-rose-100 text-rose-700",
 };
 
 const TYPE_COLOR = {
-  urgent:  { dot: "bg-brand-cta",    label: "text-brand-cta",    badge: "URGENT"  },
+  urgent: { dot: "bg-brand-cta", label: "text-brand-cta", badge: "URGENT" },
   general: { dot: "bg-brand-accent", label: "text-brand-accent", badge: "GENERAL" },
-  info:    { dot: "bg-slate-400",    label: "text-slate-400",    badge: "INFO"    },
+  info: { dot: "bg-slate-400", label: "text-slate-400", badge: "INFO" },
 };
 
 
 /* ── Main page ────────────────────────────────────────────────────── */
 const InstructorDashboardPage = () => {
-  const { user }   = useAuth();
-  const navigate   = useNavigate();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
-  const { data: courses,       loading: lc } = useFetch(() => api.get("/courses"), []);
-  const { data: batches,       loading: lb } = useFetch(() => api.get("/batches"), []);
+  const { data: courses, loading: lc } = useFetch(() => api.get("/courses"), []);
+  const { data: batches, loading: lb } = useFetch(() => api.get("/batches"), []);
   const { data: announcements, loading: la } =
     useFetch(() => api.get("/announcements"), []);
-  const { data: attendance }                 = useFetch(() => api.get("/attendance"), []);
+  const { data: attendance } = useFetch(() => api.get("/attendance"), []);
 
-  const coursesArr = Array.isArray(courses)       ? courses       : [];
-  const batchArr   = Array.isArray(batches)       ? batches       : [];
-  const annoArr    = Array.isArray(announcements) ? announcements : [];
-  const attArr     = Array.isArray(attendance)    ? attendance    : [];
+  const coursesArr = Array.isArray(courses) ? courses : [];
+  const batchArr = Array.isArray(batches) ? batches : [];
+  const annoArr = Array.isArray(announcements) ? announcements : [];
+  const attArr = Array.isArray(attendance) ? attendance : [];
 
   const totalEnrollments = useMemo(
     () => coursesArr.reduce((s, c) => s + (c.enrollmentCount || 0), 0),
@@ -75,15 +75,15 @@ const InstructorDashboardPage = () => {
     const rows = [];
     batchArr.forEach((batch) => {
       (batch.learners || []).forEach((learner) => {
-        const lid  = String(learner._id);
-        const att  = attendanceMap[lid];
+        const lid = String(learner._id);
+        const att = attendanceMap[lid];
         const rate = att?.total ? Math.round((att.present / att.total) * 100) : null;
         rows.push({
-          id:       lid,
-          name:     learner.name || "Unknown",
+          id: lid,
+          name: learner.name || "Unknown",
           initials: (learner.name || "?").slice(0, 2).toUpperCase(),
-          course:   batch.course?.title || "—",
-          status:   rate === null ? "Pending" : rate >= 75 ? "On Track" : rate >= 40 ? "Pending" : "At Risk",
+          course: batch.course?.title || "—",
+          status: rate === null ? "Pending" : rate >= 75 ? "On Track" : rate >= 40 ? "Pending" : "At Risk",
           progress: rate ?? 0,
         });
       });
@@ -143,9 +143,6 @@ const InstructorDashboardPage = () => {
             <h2 className="text-lg font-bold text-brand-ink">My Courses</h2>
             <p className="text-xs text-slate-500">Active curriculum under your management.</p>
           </div>
-          <button onClick={() => navigate("/instructor/resources")} className="flex items-center gap-1 text-sm font-semibold text-brand-primary hover:underline">
-            View All →
-          </button>
         </div>
         <div className="divide-y divide-slate-100">
           {coursesArr.slice(0, 6).map((c, idx) => (

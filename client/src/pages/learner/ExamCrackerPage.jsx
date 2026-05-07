@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import Loader from "../../components/Loader";
+import PayModal from "../../components/PayModal";
 import useFetch from "../../hooks/useFetch";
 import { CourseThumbnail } from "../../components/learner/LearnerPortalUI";
 
@@ -37,20 +38,23 @@ const IcStar = () => (
     <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
   </svg>
 );
+const IcLock = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+    <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
 
 /* ── Test Card ────────────────────────────────────────────────────────── */
-const TestCard = ({ test, attempt, isFree }) => {
+const TestCard = ({ test, attempt, isFree, isPurchased, onBuyClick }) => {
   const scorePct = attempt?.maxScore
     ? Math.round((attempt.score / attempt.maxScore) * 100)
     : null;
 
-  const pricingAmount = test.course?.pricing?.amount;
-  const price = isFree
-    ? "Free"
-    : (pricingAmount > 0 ? `₹${pricingAmount}` : "Free");
-
+  const isLocked = !isFree && !isPurchased;
+  const price = isFree ? "Free" : `₹${test.price}`;
   const hasAttempted = !!attempt;
-  const btnLabel = hasAttempted ? "Reattempt" : isFree ? "Start Free" : "Start Test";
+
+  const btnLabel = isLocked ? "Locked" : hasAttempted ? "Reattempt" : isFree ? "Start Free" : "Start";
 
   return (
     <article className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover hover:-translate-y-0.5">
@@ -72,9 +76,21 @@ const TestCard = ({ test, attempt, isFree }) => {
             </span>
           )}
         </div>
-        {hasAttempted && (
+        {hasAttempted && !isLocked && (
           <div className="absolute right-3 top-3 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[10px] font-bold text-white shadow">
             ✓ Attempted
+          </div>
+        )}
+        {isLocked && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90">
+                <IcLock />
+              </div>
+              <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-[10px] font-bold text-slate-700">
+                Paid · {price}
+              </span>
+            </div>
           </div>
         )}
       </div>
@@ -99,9 +115,7 @@ const TestCard = ({ test, attempt, isFree }) => {
         </div>
 
         {/* Language */}
-        <p className="mt-2.5 text-[11px] text-slate-500">
-          Available in English &amp; Hindi
-        </p>
+        <p className="mt-2.5 text-[11px] text-slate-500">Available in English &amp; Hindi</p>
 
         {/* Rating */}
         <div className="mt-2 flex items-center gap-1">
@@ -112,8 +126,13 @@ const TestCard = ({ test, attempt, isFree }) => {
         {/* Price + Score */}
         <div className="mt-4 flex items-end justify-between">
           <div>
-            <p className={`text-lg font-extrabold ${isFree ? "text-emerald-600" : "text-brand-primary"}`}>
-              {price}
+            <p className={`text-lg font-extrabold ${isFree ? "text-emerald-600" : isPurchased ? "text-emerald-600" : "text-violet-600"}`}>
+              {isPurchased && !isFree ? (
+                <span className="flex items-center gap-1">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="h-4 w-4 text-emerald-500"><path d="M20 6L9 17l-5-5" /></svg>
+                  Purchased
+                </span>
+              ) : price}
             </p>
             {scorePct !== null && (
               <p className="text-[11px] font-semibold text-emerald-600">Last score: {scorePct}%</p>
@@ -124,17 +143,28 @@ const TestCard = ({ test, attempt, isFree }) => {
         {/* Actions */}
         <div className="mt-4 grid grid-cols-2 gap-2">
           <Link
-            to={`/learner/exam/tests/${test._id}`}
+            to={!isLocked ? `/learner/exam/tests/${test._id}` : "#"}
+            onClick={isLocked ? (e) => e.preventDefault() : undefined}
             className="rounded-xl border border-brand-primary py-2 text-center text-xs font-bold text-brand-primary hover:bg-brand-surface transition"
           >
             Explore
           </Link>
-          <Link
-            to={`/learner/exam/tests/${test._id}`}
-            className="rounded-xl bg-brand-primary py-2 text-center text-xs font-bold text-white hover:bg-brand-ink transition"
-          >
-            {btnLabel}
-          </Link>
+          {isLocked ? (
+            <button
+              onClick={() => onBuyClick(test)}
+              className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-600 py-2 text-xs font-bold text-white hover:bg-violet-700 transition"
+            >
+              <IcLock />
+              Buy · {price}
+            </button>
+          ) : (
+            <Link
+              to={`/learner/exam/tests/${test._id}`}
+              className="rounded-xl bg-brand-primary py-2 text-center text-xs font-bold text-white hover:bg-brand-ink transition"
+            >
+              {btnLabel}
+            </Link>
+          )}
         </div>
       </div>
     </article>
@@ -142,7 +172,7 @@ const TestCard = ({ test, attempt, isFree }) => {
 };
 
 /* ── Section block ────────────────────────────────────────────────────── */
-const TestSection = ({ title, tests, attemptByTest, isFree }) => {
+const TestSection = ({ title, tests, attemptByTest, purchasedSet, isFree, onBuyClick }) => {
   if (!tests.length) return null;
   return (
     <section>
@@ -159,6 +189,8 @@ const TestSection = ({ title, tests, attemptByTest, isFree }) => {
             test={t}
             attempt={attemptByTest.get(String(t._id))}
             isFree={isFree}
+            isPurchased={purchasedSet.has(String(t._id))}
+            onBuyClick={onBuyClick}
           />
         ))}
       </div>
@@ -171,9 +203,12 @@ const ExamCrackerPage = () => {
   const [query,       setQuery]       = useState("");
   const [typeFilter,  setTypeFilter]  = useState("");
   const [modeFilter,  setModeFilter]  = useState("");   // "free" | "paid" | ""
+  const [payTarget,   setPayTarget]   = useState(null); // test to buy
 
   const { data: tests,    loading: loadingTests }    = useFetch(() => api.get("/exam/tests"), []);
   const { data: attempts, loading: loadingAttempts } = useFetch(() => api.get("/exam/attempts/mine"), []);
+  const { data: purchasedIds, loading: loadingPurchases, setData: setPurchasedIds } =
+    useFetch(() => api.get("/purchases/mine"), []);
 
   const attemptByTest = useMemo(() => {
     const m = new Map();
@@ -184,29 +219,46 @@ const ExamCrackerPage = () => {
     return m;
   }, [attempts]);
 
+  const purchasedSet = useMemo(
+    () => new Set(Array.isArray(purchasedIds) ? purchasedIds : []),
+    [purchasedIds]
+  );
+
   const patterns = useMemo(() => [...new Set(tests.map((t) => t.examPattern).filter(Boolean))], [tests]);
 
   const filtered = useMemo(() => tests.filter((t) => {
     const text = `${t.title} ${t.examPattern} ${t.course?.title || ""}`.toLowerCase();
     const qOk  = !query.trim() || text.includes(query.toLowerCase());
     const tOk  = !typeFilter || t.examPattern === typeFilter;
-    const isPaid = t.course?.pricing?.type === "paid" && (t.course?.pricing?.amount || 0) > 0;
+    const isPaid = t.pricingType === "paid" && (t.price || 0) > 0;
     const mOk  = !modeFilter || (modeFilter === "free" ? !isPaid : isPaid);
     return qOk && tOk && mOk;
   }), [tests, query, typeFilter, modeFilter]);
 
-  // Only mark as paid if both type="paid" AND a real amount>0 is set
-  const isTestPaid = (t) => t.course?.pricing?.type === "paid" && (t.course?.pricing?.amount || 0) > 0;
+  const isTestPaid = (t) => t.pricingType === "paid" && (t.price || 0) > 0;
   const paidTests = filtered.filter(isTestPaid);
   const freeTests = filtered.filter((t) => !isTestPaid(t));
 
   const hasFilters = query || typeFilter || modeFilter;
   const clearAll   = () => { setQuery(""); setTypeFilter(""); setModeFilter(""); };
 
-  if (loadingTests || loadingAttempts) return <Loader variant="skeleton" label="Loading test series…" />;
+  const handlePurchased = (testId) => {
+    setPurchasedIds((prev) => [...(Array.isArray(prev) ? prev : []), String(testId)]);
+  };
+
+  if (loadingTests || loadingAttempts || loadingPurchases) return <Loader variant="skeleton" label="Loading test series…" />;
 
   return (
     <div className="space-y-6 pb-8">
+
+      {/* Pay modal */}
+      {payTarget && (
+        <PayModal
+          test={payTarget}
+          onClose={() => setPayTarget(null)}
+          onPurchased={handlePurchased}
+        />
+      )}
 
       {/* ── Header ── */}
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -322,8 +374,22 @@ const ExamCrackerPage = () => {
         />
       ) : (
         <div className="space-y-8">
-          <TestSection title="Paid Test Series" tests={paidTests} attemptByTest={attemptByTest} isFree={false} />
-          <TestSection title="Free Test Series"  tests={freeTests} attemptByTest={attemptByTest} isFree={true} />
+          <TestSection
+            title="Paid Test Series"
+            tests={paidTests}
+            attemptByTest={attemptByTest}
+            purchasedSet={purchasedSet}
+            isFree={false}
+            onBuyClick={setPayTarget}
+          />
+          <TestSection
+            title="Free Test Series"
+            tests={freeTests}
+            attemptByTest={attemptByTest}
+            purchasedSet={purchasedSet}
+            isFree={true}
+            onBuyClick={setPayTarget}
+          />
         </div>
       )}
     </div>

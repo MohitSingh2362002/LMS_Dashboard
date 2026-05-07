@@ -1,9 +1,11 @@
-import { useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/client";
 import EmptyState from "../../components/EmptyState";
 import Loader from "../../components/Loader";
+import CourseEnrollModal from "../../components/CourseEnrollModal";
+import BrowseCourseCard from "../../components/BrowseCourseCard";
 import useFetch from "../../hooks/useFetch";
 import { buildLiveClassJoinUrl } from "../../utils/liveClass";
 import { useAuth } from "../../context/AuthContext";
@@ -89,10 +91,10 @@ const StatCard = ({ icon, label, value, sub, accent = "blue" }) => {
 /* ── Quick Tile ──────────────────────────────────────────────────────── */
 const QuickTile = ({ icon, label, sub, to, accent = "blue" }) => {
   const colors = {
-    blue:   { bg: "bg-brand-surface",  icon: "text-brand-primary", border: "border-brand-primary/20" },
-    green:  { bg: "bg-emerald-50",     icon: "text-emerald-600",   border: "border-emerald-200" },
-    amber:  { bg: "bg-amber-50",       icon: "text-amber-600",     border: "border-amber-200" },
-    purple: { bg: "bg-purple-50",      icon: "text-purple-600",    border: "border-purple-200" },
+    blue: { bg: "bg-brand-surface", icon: "text-brand-primary", border: "border-brand-primary/20" },
+    green: { bg: "bg-emerald-50", icon: "text-emerald-600", border: "border-emerald-200" },
+    amber: { bg: "bg-amber-50", icon: "text-amber-600", border: "border-amber-200" },
+    purple: { bg: "bg-purple-50", icon: "text-purple-600", border: "border-purple-200" },
   }[accent];
   return (
     <Link
@@ -114,8 +116,8 @@ const QuickTile = ({ icon, label, sub, to, accent = "blue" }) => {
 const ScheduleItem = ({ item, user }) => {
   const d = new Date(item.date);
   const month = d.toLocaleDateString("en-IN", { month: "short" });
-  const day   = d.getDate();
-  const time  = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+  const day = d.getDate();
+  const time = d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 
   const pill =
     item.type === "class"
@@ -151,12 +153,14 @@ const ScheduleItem = ({ item, user }) => {
 /* ── Main Page ───────────────────────────────────────────────────────── */
 const LearnerDashboardPage = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [enrollTarget, setEnrollTarget] = useState(null);
   const { data: enrollments, loading, refresh } = useFetch(() => api.get("/enrollments/mine"), []);
-  const { data: courses }    = useFetch(() => api.get("/courses"), []);
+  const { data: courses } = useFetch(() => api.get("/courses"), []);
   const { data: liveClasses, refresh: refreshLive } = useFetch(() => api.get("/live-classes"), []);
-  const { data: tests }      = useFetch(() => api.get("/exam/tests"), []);
-  const { data: attempts }   = useFetch(() => api.get("/exam/attempts/mine"), []);
-  const { data: lbData }     = useFetch(() => api.get("/analytics/leaderboard?limit=5&days=30"), []);
+  const { data: tests } = useFetch(() => api.get("/exam/tests"), []);
+  const { data: attempts } = useFetch(() => api.get("/exam/attempts/mine"), []);
+  const { data: lbData } = useFetch(() => api.get("/analytics/leaderboard?limit=5&days=30"), []);
   const { data: announcements } = useFetch(() => api.get("/announcements"), []);
 
   useEffect(() => {
@@ -169,9 +173,9 @@ const LearnerDashboardPage = () => {
       ? Math.round(enrollments.reduce((s, e) => s + (e.progress || 0), 0) / enrollments.length)
       : 0;
     return {
-      enrolled:  enrollments.length,
+      enrolled: enrollments.length,
       completed: enrollments.filter((e) => e.progress >= 100).length,
-      progress:  avg,
+      progress: avg,
     };
   }, [enrollments]);
 
@@ -204,14 +208,16 @@ const LearnerDashboardPage = () => {
 
   const leaderboard = lbData?.leaderboard || [];
 
-  const enroll = async (courseId) => {
-    try {
-      await api.post("/enrollments", { courseId });
-      toast.success("Enrolled successfully!");
-      refresh();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Enrollment failed");
-    }
+  const enrollFn = async (courseId) => {
+    await api.post("/enrollments", { courseId });
+  };
+
+  const handleEnrolled = async (courseId) => {
+    await refresh();
+    // navigate to that course
+    const { data: fresh } = await api.get("/enrollments/mine");
+    const enrollment = fresh.find((e) => String(e.course?._id || e.course) === String(courseId));
+    if (enrollment) navigate(`/learner/courses/${enrollment._id}`);
   };
 
   if (loading) return <Loader variant="skeleton" label="Loading dashboard…" />;
@@ -222,6 +228,17 @@ const LearnerDashboardPage = () => {
 
   return (
     <div className="space-y-7 pb-8">
+
+      {/* Enroll modal */}
+      {enrollTarget && (
+        <CourseEnrollModal
+          course={enrollTarget}
+          role="learner"
+          onClose={() => setEnrollTarget(null)}
+          onEnrolled={handleEnrolled}
+          enrollFn={enrollFn}
+        />
+      )}
 
       {/* ── Welcome Hero ── */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary via-brand-accent to-[#1A6FD0] px-7 py-6 text-white shadow-panel">
@@ -298,16 +315,26 @@ const LearnerDashboardPage = () => {
       <section>
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-extrabold text-brand-ink">Recommended Batches</h2>
-            <p className="text-xs text-slate-500">Curated courses based on your profile</p>
+            <h2 className="text-xl font-extrabold text-brand-ink">Recommended Courses</h2>
+            <p className="text-xs text-slate-500">Curated published courses — not yet enrolled</p>
           </div>
-          <Link to="/learner/batches" className="text-xs font-bold text-brand-primary hover:underline">View All →</Link>
+          <Link
+            to="/learner/all-courses"
+            className="flex items-center gap-1 rounded-xl border border-brand-primary/30 bg-brand-surface px-3 py-1.5 text-xs font-bold text-brand-primary hover:bg-brand-primary hover:text-white transition"
+          >
+            View All →
+          </Link>
         </div>
 
         {recommended.length ? (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {recommended.map((course) => (
-              <RecommendedCard key={course._id} course={course} onEnroll={enroll} />
+              <BrowseCourseCard
+                key={course._id}
+                course={course}
+                isEnrolled={false}
+                onEnrollClick={setEnrollTarget}
+              />
             ))}
           </div>
         ) : enrollments.length ? (
@@ -362,9 +389,8 @@ const LearnerDashboardPage = () => {
                 return (
                   <div
                     key={item.learner || item.email}
-                    className={`flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${
-                      isMe ? "bg-brand-primary" : "bg-white/8 hover:bg-white/12"
-                    }`}
+                    className={`flex items-center gap-3 rounded-xl px-4 py-2.5 transition ${isMe ? "bg-brand-primary" : "bg-white/8 hover:bg-white/12"
+                      }`}
                   >
                     <span className="w-6 text-center text-sm font-bold">
                       {medals[i] ?? <span className="text-white/50">{i + 1}</span>}
@@ -399,53 +425,12 @@ const LearnerDashboardPage = () => {
   );
 };
 
-/* ── Recommended Course Card ─────────────────────────────────────────── */
-const RecommendedCard = ({ course, onEnroll }) => {
-  const isFree = course.pricing?.type === "free" || !(course.pricing?.amount > 0);
-  const price  = isFree
-    ? "Free"
-    : `${course.pricing?.currency || "₹"}${course.pricing?.amount}`;
-  return (
-    <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-cardHover transition-shadow">
-      <div className="relative h-44">
-        <CourseThumbnail
-          title={course.title}
-          thumbnail={course.thumbnail}
-          className="h-full"
-
-          zoom
-        />
-        <span className="absolute right-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-brand-primary shadow-sm backdrop-blur-sm">
-          {course.examPattern || "Course"}
-        </span>
-      </div>
-      <div className="p-5">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-          {course.instructorDisplayName || course.instructor?.name || "Faculty"}
-        </p>
-        <h3 className="mt-1 line-clamp-2 text-sm font-extrabold text-brand-ink leading-snug">{course.title}</h3>
-        <div className="mt-3 flex items-center gap-1">
-          {[1,2,3,4,5].map((s) => <IcStar key={s} filled={s <= 4} />)}
-          <span className="ml-1 text-[11px] text-slate-500">4.0</span>
-        </div>
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-lg font-extrabold text-brand-primary">{price}</p>
-          <button
-            onClick={() => onEnroll(course._id)}
-            className="rounded-lg bg-brand-cta px-4 py-1.5 text-xs font-bold text-white hover:opacity-90 transition"
-          >
-            Enroll Now
-          </button>
-        </div>
-      </div>
-    </article>
-  );
-};
+/* RecommendedCard replaced by BrowseCourseCard (imported from components) */
 
 /* ── Enrolled Batch Card ─────────────────────────────────────────────── */
 const EnrolledCard = ({ enrollment }) => {
   const course = enrollment.course;
-  const pct    = Math.min(100, enrollment.progress || 0);
+  const pct = Math.min(100, enrollment.progress || 0);
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-cardHover transition-shadow">
       <div className="relative h-44">

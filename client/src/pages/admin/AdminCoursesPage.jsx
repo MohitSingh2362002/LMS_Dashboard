@@ -178,7 +178,7 @@ const AdminCoursesPage = () => {
             const tagClass = CATEGORY_TAG[cat] || CATEGORY_TAG.default;
             return (
               <article key={course._id} className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition-all hover:shadow-cardHover">
-                <div className="relative h-32 bg-gradient-to-br from-brand-accent to-brand-primary">
+                <div className="relative h-42 bg-gradient-to-br from-brand-accent to-brand-primary">
                   {course.thumbnail ? (
                     <img
                       src={getFullImageUrl(course.thumbnail)}

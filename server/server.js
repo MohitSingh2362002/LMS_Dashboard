@@ -28,6 +28,8 @@ import chatRoutes from "./routes/chatRoutes.js";
 import securityRoutes from "./routes/securityRoutes.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
+import supportRoutes from "./routes/supportRoutes.js";
+import purchaseRoutes from "./routes/purchaseRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -88,6 +90,8 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/security", securityRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/support", supportRoutes);
+app.use("/api/purchases", purchaseRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-user", ({ userId }) => {

@@ -7,9 +7,11 @@ import {
   requestMigration,
   reviewMigrationRequest,
   updateBatch,
+  updateBatchThumbnail,
   updateSyllabusProgress
 } from "../controllers/batchController.js";
 import { authorize, protect } from "../middleware/authMiddleware.js";
+import { upload } from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
 
@@ -24,6 +26,7 @@ router.post("/migrations", protect, authorize("admin", "instructor"), requestMig
 router.put("/migrations/:id/review", protect, authorize("admin"), reviewMigrationRequest);
 
 router.put("/:id", protect, authorize("admin"), updateBatch);
+router.patch("/:id/thumbnail", protect, authorize("admin"), upload.single("thumbnail"), updateBatchThumbnail);
 router.patch("/:id/syllabus", protect, authorize("admin", "instructor"), updateSyllabusProgress);
 
 export default router;

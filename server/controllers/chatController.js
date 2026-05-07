@@ -98,9 +98,32 @@ export const getConversations = asyncHandler(async (req, res) => {
 });
 
 export const createConversation = asyncHandler(async (req, res) => {
-  if (req.user.role !== "parent") {
+  const isAdminOrInstructor = req.user.role === "admin" || req.user.role === "instructor";
+
+  if (!isAdminOrInstructor && req.user.role !== "parent") {
     res.status(403);
-    throw new Error("Only parents can start parent-teacher conversations");
+    throw new Error("Only parents, admins, or instructors can start conversations");
+  }
+
+  if (isAdminOrInstructor) {
+    const { parent, learner } = req.body;
+    if (!parent || !learner) {
+      res.status(400);
+      throw new Error("parent and learner are required");
+    }
+    const conversation = await Conversation.findOneAndUpdate(
+      { parent, teacher: req.user._id, learner },
+      {
+        parent,
+        teacher: req.user._id,
+        learner,
+        batch: null,
+        course: null
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+    const populated = await populateConversation(Conversation.findById(conversation._id));
+    return res.status(201).json(populated);
   }
 
   const { learner, teacher } = req.body;
@@ -148,6 +171,50 @@ export const getMessages = asyncHandler(async (req, res) => {
     .sort({ createdAt: 1 });
 
   res.json(messages);
+});
+
+export const getAvailableParents = asyncHandler(async (req, res) => {
+  let parents = [];
+  if (req.user.role === "admin") {
+    parents = await User.find({ role: "parent" }).select("name email linkedLearners").populate("linkedLearners", "name email");
+  } else if (req.user.role === "instructor") {
+    // Find parents whose linked learners are in this instructor's batches
+    const batches = await Batch.find({ mentor: req.user._id }).populate("learners", "_id");
+    const learnerIds = batches.flatMap((b) => b.learners.map((l) => String(l._id)));
+    parents = await User.find({ role: "parent", linkedLearners: { $in: learnerIds } })
+      .select("name email linkedLearners").populate("linkedLearners", "name email");
+  }
+  res.json(parents);
+});
+
+/* Returns parents of learners in a specific batch (for instructor batch-filter UI) */
+export const getBatchParents = asyncHandler(async (req, res) => {
+  const { batchId } = req.params;
+  const batch = await Batch.findById(batchId).populate("learners", "name email");
+
+  if (!batch) { res.status(404); throw new Error("Batch not found"); }
+
+  // Instructor: must own the batch
+  if (req.user.role === "instructor" && String(batch.mentor) !== String(req.user._id)) {
+    res.status(403); throw new Error("Not authorised to view this batch");
+  }
+
+  const learnerIds = batch.learners.map((l) => l._id);
+
+  // Find parents that have at least one linked learner in this batch
+  const parents = await User.find({ role: "parent", linkedLearners: { $in: learnerIds } })
+    .select("name email linkedLearners")
+    .populate({ path: "linkedLearners", select: "name email", match: { _id: { $in: learnerIds } } });
+
+  res.json({
+    batch: { _id: batch._id, name: batch.name },
+    parents: parents.map((p) => ({
+      _id: p._id,
+      name: p.name,
+      email: p.email,
+      linkedLearners: p.linkedLearners // only learners in this batch (due to match filter)
+    }))
+  });
 });
 
 export const sendMessage = asyncHandler(async (req, res) => {

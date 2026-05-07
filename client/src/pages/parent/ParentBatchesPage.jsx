@@ -53,6 +53,17 @@ const BatchCard = ({ batch, linkedLearners = [] }) => {
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover hover:-translate-y-0.5">
+      {/* Batch thumbnail */}
+      {batch.thumbnail && (
+        <div className="h-32 w-full overflow-hidden bg-slate-100">
+          <img
+            src={batch.thumbnail}
+            alt={batch.name}
+            className="h-full w-full object-cover"
+            onError={(e) => { e.target.onerror = null; e.target.parentElement.style.display = "none"; }}
+          />
+        </div>
+      )}
       {/* Header band */}
       <div className="px-5 pt-5">
         <div className="flex items-start justify-between gap-3">

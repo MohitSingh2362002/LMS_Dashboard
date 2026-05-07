@@ -13,7 +13,9 @@ import AdminLiveClassesPage from "./pages/admin/AdminLiveClassesPage";
 import AdminQuestionsPage from "./pages/admin/AdminQuestionsPage";
 import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
+import AdminSupportPage from "./pages/admin/AdminSupportPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+import SupportPage from "./pages/shared/SupportPage";
 import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
@@ -39,7 +41,9 @@ import ExamResultPage from "./pages/learner/ExamResultPage";
 import ExamLeaderboardPage from "./pages/learner/ExamLeaderboardPage";
 import LearnerDoubtVaultPage from "./pages/learner/LearnerDoubtVaultPage";
 import LearnerMyCoursesPage from "./pages/learner/LearnerMyCoursesPage";
+import LearnerAllCoursesPage from "./pages/learner/LearnerAllCoursesPage";
 import LearnerStudyMaterialsPage from "./pages/learner/LearnerStudyMaterialsPage";
+import ParentCoursesPage from "./pages/parent/ParentCoursesPage";
 import ParentDashboardPage from "./pages/parent/ParentDashboardPage";
 import ParentReportsPage from "./pages/parent/ParentReportsPage";
 import ParentBatchesPage from "./pages/parent/ParentBatchesPage";
@@ -98,6 +102,7 @@ function App() {
         <Route path="questions" element={<AdminQuestionsPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="announcements" element={<AdminAnnouncementsPage />} />
+        <Route path="support" element={<AdminSupportPage />} />
       </Route>
 
       <Route
@@ -123,6 +128,7 @@ function App() {
         <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />
         <Route path="questions" element={<InstructorQuestionsPage />} />
+        <Route path="support" element={<SupportPage />} />
       </Route>
 
       <Route
@@ -141,11 +147,13 @@ function App() {
         <Route path="exam/results/:attemptId" element={<ExamResultPage />} />
         <Route path="exam/tests/:testId/leaderboard" element={<ExamLeaderboardPage />} />
         <Route path="courses" element={<LearnerMyCoursesPage />} />
+        <Route path="all-courses" element={<LearnerAllCoursesPage />} />
         <Route path="study-materials" element={<LearnerStudyMaterialsPage />} />
         <Route path="doubts" element={<LearnerDoubtVaultPage />} />
         <Route path="attendance" element={<AttendanceViewPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses/:enrollmentId" element={<CourseViewerPage />} />
+        <Route path="support" element={<SupportPage />} />
       </Route>
 
       <Route
@@ -157,6 +165,7 @@ function App() {
         }
       >
         <Route index element={<ParentDashboardPage />} />
+        <Route path="courses" element={<ParentCoursesPage />} />
         <Route path="reports" element={<ParentReportsPage />} />
         <Route path="batches" element={<ParentBatchesPage />} />
         <Route path="exam" element={<ParentExamPage />} />
@@ -165,6 +174,7 @@ function App() {
         <Route path="attendance" element={<AttendanceViewPage />} />
         <Route path="chat" element={<ParentTeacherChatPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="support" element={<SupportPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

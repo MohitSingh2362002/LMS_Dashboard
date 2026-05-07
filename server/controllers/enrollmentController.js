@@ -1,5 +1,6 @@
 import Course from "../models/Course.js";
 import Enrollment from "../models/Enrollment.js";
+import User from "../models/User.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
 export const enrollInCourse = asyncHandler(async (req, res) => {
@@ -37,6 +38,40 @@ export const getLearnersByCourse = asyncHandler(async (req, res) => {
   const enrollments = await Enrollment.find({ course: courseId }).select("learner");
   const learnerIds = enrollments.map((e) => String(e.learner));
   res.json(learnerIds);
+});
+
+/**
+ * POST /enrollments/parent-enroll
+ * Parent purchases/enrolls a linked learner in a course.
+ * Body: { courseId, learnerId }
+ */
+export const parentEnrollLearner = asyncHandler(async (req, res) => {
+  const { courseId, learnerId } = req.body;
+
+  if (!courseId || !learnerId) {
+    res.status(400); throw new Error("courseId and learnerId are required");
+  }
+
+  // Verify this learner is linked to the parent
+  const parent = await User.findById(req.user._id).select("linkedLearners");
+  const isLinked = (parent?.linkedLearners || []).some((id) => String(id) === String(learnerId));
+  if (!isLinked) {
+    res.status(403); throw new Error("This learner is not linked to your account");
+  }
+
+  const course = await Course.findById(courseId);
+  if (!course || course.status !== "published") {
+    res.status(404); throw new Error("Course unavailable");
+  }
+
+  // Upsert enrollment (idempotent)
+  let enrollment = await Enrollment.findOne({ learner: learnerId, course: courseId });
+  if (!enrollment) {
+    enrollment = await Enrollment.create({ learner: learnerId, course: courseId });
+  }
+
+  const populated = await Enrollment.findById(enrollment._id).populate("course");
+  res.status(201).json(populated);
 });
 
 export const updateProgress = asyncHandler(async (req, res) => {

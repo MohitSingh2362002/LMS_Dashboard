@@ -68,13 +68,16 @@ export const createBatch = asyncHandler(async (req, res) => {
 
   await validateBatchRefs(res, { course, mentor, learners });
 
+  const thumbnail = req.file?.storedPath || req.body.thumbnail || "";
+
   const batch = await Batch.create({
     name,
     course,
     mentor,
     learners,
     performanceGroup,
-    status
+    status,
+    thumbnail,
   });
 
   const populated = await populateBatch(Batch.findById(batch._id));
@@ -89,13 +92,18 @@ export const updateBatch = asyncHandler(async (req, res) => {
     throw new Error("Batch not found");
   }
 
+  const thumbnail = req.file?.storedPath
+    ? req.file.storedPath
+    : req.body.thumbnail ?? batch.thumbnail;
+
   const next = {
     name: req.body.name ?? batch.name,
     course: req.body.course ?? batch.course,
     mentor: req.body.mentor ?? batch.mentor,
     learners: req.body.learners ?? batch.learners,
     performanceGroup: req.body.performanceGroup ?? batch.performanceGroup,
-    status: req.body.status ?? batch.status
+    status: req.body.status ?? batch.status,
+    thumbnail,
   };
 
   await validateBatchRefs(res, next);
@@ -103,6 +111,20 @@ export const updateBatch = asyncHandler(async (req, res) => {
 
   const updated = await batch.save();
   const populated = await populateBatch(Batch.findById(updated._id));
+  res.json(populated);
+});
+
+export const updateBatchThumbnail = asyncHandler(async (req, res) => {
+  const batch = await Batch.findById(req.params.id);
+  if (!batch) { res.status(404); throw new Error("Batch not found"); }
+
+  const thumbnail = req.file?.storedPath;
+  if (!thumbnail) { res.status(400); throw new Error("No image file provided"); }
+
+  batch.thumbnail = thumbnail;
+  await batch.save();
+
+  const populated = await populateBatch(Batch.findById(batch._id));
   res.json(populated);
 });
 
