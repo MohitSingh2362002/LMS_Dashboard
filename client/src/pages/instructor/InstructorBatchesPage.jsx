@@ -261,34 +261,40 @@ const InstructorBatchesPage = () => {
             return (
               <div
                 key={batch._id}
-                className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-md transition-shadow"
+                className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-cardHover hover:-translate-y-0.5 transition-all"
               >
-                {/* Batch thumbnail */}
-                {batch.thumbnail && (
-                  <div className="h-32 w-full overflow-hidden bg-slate-100">
+                {/* Batch thumbnail — h-44 to match course card */}
+                <div className="relative h-44 overflow-hidden bg-gradient-to-br from-brand-accent to-brand-primary">
+                  {batch.thumbnail ? (
                     <img
                       src={batch.thumbnail}
                       alt={batch.name}
                       className="h-full w-full object-cover"
-                      onError={(e) => { e.target.onerror = null; e.target.parentElement.style.display = "none"; }}
+                      onError={(e) => { e.target.onerror = null; e.target.style.display = "none"; }}
                     />
-                  </div>
-                )}
-                <div className="p-5">
-                {/* Title */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-brand-primary truncate">{batch.name}</h3>
-                    <p className="mt-0.5 text-xs text-slate-500 truncate">
-                      {batch.course?.title || "No course assigned"}
-                    </p>
-                    {totalPages > 0 && (
-                      <p className="text-[10px] text-slate-400 mt-0.5">{totalPages} pages in syllabus</p>
-                    )}
-                  </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${GROUP_BADGE[batch.performanceGroup] || "bg-slate-100 text-slate-600"}`}>
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-12 w-12 opacity-40">
+                        <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                        <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                      </svg>
+                    </div>
+                  )}
+                  {/* Track badge */}
+                  <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${GROUP_BADGE[batch.performanceGroup] || "bg-slate-100 text-slate-600"}`}>
                     {batch.performanceGroup}
                   </span>
+                </div>
+                <div className="p-5">
+                {/* Title */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-brand-primary truncate">{batch.name}</h3>
+                  <p className="mt-0.5 text-xs text-slate-500 truncate">
+                    {batch.course?.title || "No course assigned"}
+                  </p>
+                  {totalPages > 0 && (
+                    <p className="text-[10px] text-slate-400 mt-0.5">{totalPages} pages in syllabus</p>
+                  )}
                 </div>
 
                 {/* Learner count */}

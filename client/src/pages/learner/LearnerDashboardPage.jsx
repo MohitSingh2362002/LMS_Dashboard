@@ -89,28 +89,23 @@ const StatCard = ({ icon, label, value, sub, accent = "blue" }) => {
 };
 
 /* ── Quick Tile ──────────────────────────────────────────────────────── */
-const QuickTile = ({ icon, label, sub, to, accent = "blue" }) => {
-  const colors = {
-    blue: { bg: "bg-brand-surface", icon: "text-brand-primary", border: "border-brand-primary/20" },
-    green: { bg: "bg-emerald-50", icon: "text-emerald-600", border: "border-emerald-200" },
-    amber: { bg: "bg-amber-50", icon: "text-amber-600", border: "border-amber-200" },
-    purple: { bg: "bg-purple-50", icon: "text-purple-600", border: "border-purple-200" },
-  }[accent];
-  return (
-    <Link
-      to={to}
-      className={`group flex flex-col items-center gap-3 rounded-2xl border ${colors.border} ${colors.bg} p-5 text-center transition hover:shadow-md hover:-translate-y-0.5`}
-    >
-      <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-white shadow-sm ${colors.icon}`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm font-bold text-brand-ink">{label}</p>
-        {sub && <p className="mt-0.5 text-[11px] text-slate-500">{sub}</p>}
-      </div>
-    </Link>
-  );
-};
+const QuickTile = ({ icon, label, sub, to, gradient }) => (
+  <Link
+    to={to}
+    className={`group relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl p-5 text-center text-white transition hover:-translate-y-0.5 hover:shadow-lg ${gradient}`}
+  >
+    {/* Decorative circles */}
+    <div className="pointer-events-none absolute -right-4 -bottom-4 h-20 w-20 rounded-full bg-white/10" />
+    <div className="pointer-events-none absolute -right-1 -bottom-8 h-14 w-14 rounded-full bg-white/10" />
+    <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+      {icon}
+    </div>
+    <div className="relative">
+      <p className="text-sm font-bold">{label}</p>
+      {sub && <p className="mt-0.5 text-[11px] text-white/75">{sub}</p>}
+    </div>
+  </Link>
+);
 
 /* ── Schedule Item ───────────────────────────────────────────────────── */
 const ScheduleItem = ({ item, user }) => {
@@ -241,7 +236,7 @@ const LearnerDashboardPage = () => {
       )}
 
       {/* ── Welcome Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary via-brand-accent to-[#1A6FD0] px-7 py-6 text-white shadow-panel">
+      <div className="relative overflow-hidden rounded-2xl px-7 py-6 text-white shadow-panel" style={{ background: "linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%)" }}>
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
         />
@@ -304,10 +299,10 @@ const LearnerDashboardPage = () => {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <QuickTile icon={<IcUsers />} label="My Batches" sub="View your batches" to="/learner/batches" accent="blue" />
-          <QuickTile icon={<IcTest />} label="Mock Tests" sub="Test series & exams" to="/learner/exam" accent="amber" />
-          <QuickTile icon={<IcHistory />} label="Test History" sub="Past results" to={attempts[0] ? `/learner/exam/results/${attempts[0]._id}` : "/learner/exam"} accent="green" />
-          <QuickTile icon={<IcDoubt />} label="Doubt Vault" sub="Ask your mentor" to="/learner/doubts" accent="purple" />
+          <QuickTile icon={<IcUsers />} label="My Batches" sub="View your batches" to="/learner/batches" gradient="bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8]" />
+          <QuickTile icon={<IcTest />} label="Mock Tests" sub="Test series & exams" to="/learner/exam" gradient="bg-gradient-to-br from-[#F59E0B] to-[#B45309]" />
+          <QuickTile icon={<IcHistory />} label="Test History" sub="Past results" to={attempts[0] ? `/learner/exam/results/${attempts[0]._id}` : "/learner/exam"} gradient="bg-gradient-to-br from-[#10B981] to-[#047857]" />
+          <QuickTile icon={<IcDoubt />} label="Doubt Vault" sub="Ask your mentor" to="/learner/doubts" gradient="bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9]" />
         </div>
       </section>
 

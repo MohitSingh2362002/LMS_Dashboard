@@ -407,81 +407,75 @@ const AdminBatchesPage = () => {
             {!activeBatches.length ? (
               <EmptyState title="No batches found" description="Adjust filters or create a new batch." />
             ) : (
-              <div className="space-y-3">
+              <div className="grid gap-5 sm:grid-cols-2">
                 {activeBatches.map((b) => {
                   const trackClass = TRACK_PILL[b.performanceGroup] || TRACK_PILL.foundation;
                   const isArchived = b.status === "archived";
                   return (
                     <div key={b._id}
-                      className={`overflow-hidden rounded-2xl border bg-white shadow-card transition-all hover:shadow-cardHover ${isArchived ? "border-slate-200 opacity-70" : "border-slate-200/70"}`}>
-                      {/* Thumbnail strip */}
-                      {b.thumbnail && (
-                        <div className="h-29 w-full overflow-hidden bg-slate-100">
+                      className={`group overflow-hidden rounded-2xl border bg-white shadow-card transition-all hover:shadow-cardHover hover:-translate-y-0.5 ${isArchived ? "border-slate-200 opacity-70" : "border-slate-200/70"}`}>
+                      {/* Thumbnail — same h-44 as course card */}
+                      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-brand-accent to-brand-primary">
+                        {b.thumbnail ? (
                           <img
                             src={b.thumbnail}
                             alt={b.name}
                             className="h-full w-full object-cover"
-                            onError={(e) => { e.target.onerror = null; e.target.parentElement.style.display = "none"; }}
+                            onError={(e) => { e.target.onerror = null; e.target.style.display = "none"; }}
                           />
-                        </div>
-                      )}
+                        ) : (
+                          <div className="flex h-full items-center justify-center">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-12 w-12 opacity-40">
+                              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                              <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                            </svg>
+                          </div>
+                        )}
+                        {/* Status badge */}
+                        <span className={`absolute left-3 top-3 rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${isArchived ? "bg-slate-600 text-white" : "bg-emerald-500 text-white"}`}>
+                          {b.status}
+                        </span>
+                        {/* Track badge */}
+                        <span className={`absolute right-3 top-3 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase shadow-sm ${trackClass}`}>
+                          {b.performanceGroup}
+                        </span>
+                      </div>
+
                       <div className="p-4">
-                        <div className="flex flex-wrap items-start gap-2">
-                          <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${isArchived ? "bg-slate-100 text-slate-500" : "bg-emerald-100 text-emerald-700"}`}>
-                            {b.status}
-                          </span>
-                          <span className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${trackClass}`}>
-                            {b.performanceGroup}
-                          </span>
-                        </div>
-                        <h3 className="mt-2 text-base font-bold text-brand-ink">{b.name}</h3>
-                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
+                        <h3 className="line-clamp-2 text-sm font-bold text-brand-ink leading-snug">{b.name}</h3>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                           <span className="flex items-center gap-1.5">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>
-                            {b.course?.title || "—"}
+                            <span className="truncate max-w-[120px]">{b.course?.title || "—"}</span>
                           </span>
                           <span className="flex items-center gap-1.5">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><circle cx="12" cy="8" r="4" /><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" /></svg>
                             {b.mentor?.name || "Unassigned"}
                           </span>
                         </div>
+
+                        {/* Learner count + date */}
                         <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
                           <div className="flex items-center gap-1.5 text-xs text-slate-500">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" /></svg>
                             <span className="font-semibold text-brand-ink">{b.learners?.length || 0}</span> Learners
-                            <span className="ml-3">Updated {formatDate(b.updatedAt)}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => toggleArchive(b)}
                               className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition ${isArchived
                                 ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                                : "border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
-                                }`}
+                                : "border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"}`}
                             >
-                              {isArchived ? (
-                                <>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M3 12h18M3 6h18M3 18h18" /></svg>
-                                  Restore
-                                </>
-                              ) : (
-                                <>
-                                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3 w-3"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" /></svg>
-                                  Archive
-                                </>
-                              )}
+                              {isArchived ? "Restore" : "Archive"}
                             </button>
                             <button onClick={() => { startEdit(b); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                              className="text-xs font-medium text-slate-500 hover:text-brand-ink hover:underline">
-                              Edit
-                            </button>
+                              className="text-xs font-medium text-slate-500 hover:text-brand-ink hover:underline">Edit</button>
                             <button onClick={() => setViewingBatch(b)}
-                              className="text-xs font-semibold text-brand-accent hover:underline">
-                              View Details →
-                            </button>
+                              className="text-xs font-semibold text-brand-accent hover:underline">View →</button>
                           </div>
                         </div>
-                      </div>{/* end p-4 */}
+                      </div>
                     </div>
                   );
                 })}

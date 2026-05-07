@@ -96,7 +96,8 @@ const InstructorDashboardPage = () => {
   return (
     <div className="space-y-6">
       {/* ── Welcome Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-brand-ink p-7 text-white">
+      <div className="relative overflow-hidden rounded-2xl p-7 text-white" style={{ background: "linear-gradient(135deg, #1a0f52 0%, #2d1f8a 45%, #1a3d9a 100%)" }}>
+        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.08) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <div className="relative z-10 max-w-lg">
           <h1 className="text-2xl font-bold">Welcome back, {user.name} 👋</h1>
           <p className="mt-2 text-sm text-white/70">
@@ -111,7 +112,7 @@ const InstructorDashboardPage = () => {
             </div>
           ))}
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-brand-ink via-brand-ink/90 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-white/5 pointer-events-none" />
       </div>
 
       {/* ── Stats ── */}
@@ -120,18 +121,24 @@ const InstructorDashboardPage = () => {
           {
             label: "ASSIGNED COURSES", value: coursesArr.length,
             icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>,
+            gradient: "linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)",
           },
           {
             label: "ENROLLMENTS", value: totalEnrollments,
             icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6"><path d="M22 10v6M2 10l10-5 10 5-10 5L2 10z" /><path d="M6 12v5a6 3 0 0012 0v-5" /></svg>,
+            gradient: "linear-gradient(135deg, #7C3AED 0%, #DB2777 100%)",
           },
         ].map((s) => (
-          <div key={s.label} className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center shadow-card">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-surface text-brand-primary">
-              {s.icon}
+          <div key={s.label} className="relative overflow-hidden rounded-2xl p-6 text-center text-white shadow-card" style={{ background: s.gradient }}>
+            <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 translate-x-8 -translate-y-8 rounded-full bg-white/10" />
+            <div className="pointer-events-none absolute right-8 top-8 h-20 w-20 translate-x-4 -translate-y-4 rounded-full bg-white/10" />
+            <div className="relative">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 text-white">
+                {s.icon}
+              </div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">{s.label}</p>
+              <p className="mt-1 text-4xl font-bold text-white">{s.value}</p>
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{s.label}</p>
-            <p className="mt-1 text-4xl font-bold text-brand-ink">{s.value}</p>
           </div>
         ))}
       </div>

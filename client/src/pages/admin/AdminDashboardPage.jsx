@@ -342,34 +342,94 @@ const AdminDashboardPage = () => {
           })()}
         </div>
 
-        <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card">
-          <h2 className="mb-3 text-base font-semibold text-brand-ink">Quick Pulse</h2>
-          <div className="space-y-2.5">
-            {stats.pendingMigrations > 0 ? (
-              <PulseItem tone="info" title="Pending Migrations" body={`${stats.pendingMigrations} batch migration request${stats.pendingMigrations > 1 ? "s" : ""} awaiting review.`} />
-            ) : null}
-            {stats.unansweredQuestions > 0 ? (
-              <PulseItem tone="danger" title="Unanswered Doubts" body={`${stats.unansweredQuestions} student doubt${stats.unansweredQuestions > 1 ? "s" : ""} in the Doubt Vault need attention.`} />
-            ) : null}
-            {analytics?.doubtStats?.answered > 0 ? (
-              <PulseItem tone="success" title="Doubts Resolved" body={`${analytics.doubtStats.answered} doubts resolved out of ${analytics.doubtStats.total} total.`} />
-            ) : null}
-            {!stats.pendingMigrations && !stats.unansweredQuestions && !analytics?.doubtStats?.answered ? (
-              <PulseItem tone="success" title="All Clear" body="No pending actions or alerts at this time." />
-            ) : null}
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card flex flex-col">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-brand-ink">Quick Pulse</h2>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Live</span>
           </div>
+
+          <div className="flex-1 space-y-2">
+            {/* Unanswered Doubts — highest priority */}
+            {stats.unansweredQuestions > 0 && (
+              <PulseItem tone="danger" title="Unanswered Doubts"
+                body={`${stats.unansweredQuestions} student doubt${stats.unansweredQuestions > 1 ? "s" : ""} in the Doubt Vault need attention.`} />
+            )}
+
+            {/* Low star reviews */}
+            {stats.lowReviews > 0 && (
+              <PulseItem tone="danger" title="Low-Rated Reviews"
+                body={`${stats.lowReviews} review${stats.lowReviews > 1 ? "s" : ""} with ≤2 stars — quality check needed.`} />
+            )}
+
+            {/* Pending Migrations */}
+            {stats.pendingMigrations > 0 && (
+              <PulseItem tone="info" title="Pending Migrations"
+                body={`${stats.pendingMigrations} batch migration request${stats.pendingMigrations > 1 ? "s" : ""} awaiting review.`} />
+            )}
+
+            {/* Attendance alert */}
+            {(() => {
+              const rate = analytics?.attendanceRate ?? null;
+              if (rate !== null && rate < 60) {
+                return <PulseItem tone="danger" title="Low Attendance Rate" body={`Overall attendance is ${rate}% — below the 60% threshold. Review sessions.`} />;
+              }
+              return null;
+            })()}
+
+            {/* Enrollment trend — warn if all weeks are 0 */}
+            {enrollmentTrend.every((w) => w.value === 0) && (
+              <PulseItem tone="info" title="No Recent Enrollments"
+                body="Zero enrollments recorded in the last 4 weeks. Consider promotion." />
+            )}
+
+            {/* No active batches */}
+            {stats.activeBatches === 0 && (
+              <PulseItem tone="info" title="No Active Batches"
+                body="All batches are archived. Create a new batch to resume operations." />
+            )}
+
+            {/* Doubts resolved — success */}
+            {analytics?.doubtStats?.answered > 0 && (
+              <PulseItem tone="success" title="Doubts Resolved"
+                body={`${analytics.doubtStats.answered} of ${analytics.doubtStats.total} doubts resolved (${Math.round((analytics.doubtStats.answered / analytics.doubtStats.total) * 100)}% rate).`} />
+            )}
+
+            {/* Good attendance */}
+            {analytics?.attendanceRate >= 80 && (
+              <PulseItem tone="success" title="Great Attendance"
+                body={`Overall attendance is ${analytics.attendanceRate}% — well above target.`} />
+            )}
+
+            {/* All clear */}
+            {!stats.unansweredQuestions && !stats.lowReviews && !stats.pendingMigrations &&
+             !(analytics?.attendanceRate < 60) && !enrollmentTrend.every((w) => w.value === 0) &&
+             stats.activeBatches > 0 && (
+              <PulseItem tone="success" title="All Systems Clear"
+                body="No pending actions or alerts. Everything is running smoothly." />
+            )}
+          </div>
+
+          {/* Quick action buttons */}
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <button
-              onClick={() => navigate("/admin/doubts")}
+            <button onClick={() => navigate("/admin/doubts")}
               className="flex items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100 transition">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" /></svg>
-              Doubt Vault
+              Doubts {stats.unansweredQuestions > 0 && <span className="ml-0.5 rounded-full bg-rose-500 px-1.5 text-white text-[9px]">{stats.unansweredQuestions}</span>}
             </button>
-            <button
-              onClick={() => navigate("/admin/migrations")}
+            <button onClick={() => navigate("/admin/migrations")}
               className="flex items-center justify-center gap-1.5 rounded-lg border border-brand-accent/30 bg-brand-surface px-3 py-2 text-xs font-semibold text-brand-primary hover:bg-brand-surface/70 transition">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg>
-              Migrations
+              Migrations {stats.pendingMigrations > 0 && <span className="ml-0.5 rounded-full bg-brand-primary px-1.5 text-white text-[9px]">{stats.pendingMigrations}</span>}
+            </button>
+            <button onClick={() => navigate("/admin/reviews")}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-100 transition">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+              Reviews {stats.lowReviews > 0 && <span className="ml-0.5 rounded-full bg-amber-500 px-1.5 text-white text-[9px]">{stats.lowReviews}</span>}
+            </button>
+            <button onClick={() => navigate("/admin/support")}
+              className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 transition">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" /></svg>
+              Support
             </button>
           </div>
         </div>

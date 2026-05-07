@@ -53,27 +53,35 @@ const BatchCard = ({ batch, linkedLearners = [] }) => {
 
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover hover:-translate-y-0.5">
-      {/* Batch thumbnail */}
-      {batch.thumbnail && (
-        <div className="h-32 w-full overflow-hidden bg-slate-100">
+      {/* Thumbnail — h-44 to match course card */}
+      <div className="relative h-44 overflow-hidden bg-gradient-to-br from-teal-500 to-teal-700">
+        {batch.thumbnail ? (
           <img
             src={batch.thumbnail}
             alt={batch.name}
             className="h-full w-full object-cover"
-            onError={(e) => { e.target.onerror = null; e.target.parentElement.style.display = "none"; }}
+            onError={(e) => { e.target.onerror = null; e.target.style.display = "none"; }}
           />
-        </div>
-      )}
+        ) : (
+          <div className="flex h-full items-center justify-center">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-12 w-12 opacity-40">
+              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+            </svg>
+          </div>
+        )}
+        {/* Track badge */}
+        <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${style.bg} ${style.text}`}>
+          {batch.performanceGroup || "—"}
+        </span>
+      </div>
       {/* Header band */}
-      <div className="px-5 pt-5">
+      <div className="px-5 pt-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-sm font-extrabold text-brand-ink">{batch.name}</h3>
             <p className="mt-0.5 truncate text-[11px] text-slate-500">{batch.course?.title || "No course linked"}</p>
           </div>
-          <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${style.bg} ${style.text}`}>
-            {batch.performanceGroup || "—"}
-          </span>
         </div>
       </div>
 

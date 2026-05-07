@@ -163,16 +163,19 @@ const LearnerCard = ({ learner, enrollments, batches }) => {
 const QuickTile = ({ to, icon: Icon, label, sub, gradient }) => (
   <Link
     to={to}
-    className={`group flex flex-col justify-between rounded-2xl p-5 text-white transition hover:-translate-y-0.5 hover:shadow-lg ${gradient}`}
+    className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl p-5 text-white transition hover:-translate-y-0.5 hover:shadow-lg ${gradient}`}
   >
-    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+    {/* Decorative orbs */}
+    <div className="pointer-events-none absolute -right-6 -bottom-6 h-24 w-24 rounded-full bg-white/15" />
+    <div className="pointer-events-none absolute -right-2 -bottom-10 h-16 w-16 rounded-full bg-white/15" />
+    <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
       <Icon />
     </div>
-    <div className="mt-6">
-      <p className="text-sm font-extrabold">{label}</p>
-      <p className="mt-0.5 text-[11px] text-white/75">{sub}</p>
+    <div className="relative mt-6">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-white/60">{label.toUpperCase()}</p>
+      <p className="mt-0.5 text-base font-extrabold">{sub}</p>
     </div>
-    <div className="mt-4 flex justify-end opacity-60 group-hover:opacity-100 transition">
+    <div className="relative mt-4 flex justify-end opacity-60 group-hover:opacity-100 transition">
       <IcArrow />
     </div>
   </Link>
@@ -240,10 +243,10 @@ const ParentDashboardPage = () => {
 
       {/* ── Quick Links ── */}
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <QuickTile to="/parent/reports"          icon={IcChart}  label="Growth Reports" sub="Score trends & ranks"  gradient="bg-gradient-to-br from-teal-600 to-teal-800" />
-        <QuickTile to="/parent/batches"          icon={IcBatch}  label="My Batches"     sub="Batch & mentor info"   gradient="bg-gradient-to-br from-brand-primary to-[#0b3d86]" />
-        <QuickTile to="/parent/exam"             icon={IcBook}   label="Tests"          sub="Mock test status"      gradient="bg-gradient-to-br from-violet-600 to-violet-800" />
-        <QuickTile to="/parent/exam/leaderboards" icon={IcUsers} label="Leaderboards"   sub="Rank comparison"       gradient="bg-gradient-to-br from-amber-500 to-amber-700" />
+        <QuickTile to="/parent/reports"           icon={IcChart}  label="Growth Reports" sub="Score trends & ranks" gradient="bg-gradient-to-br from-[#10B981] to-[#059669]" />
+        <QuickTile to="/parent/batches"           icon={IcBatch}  label="My Batches"     sub="Batch & mentor info"  gradient="bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8]" />
+        <QuickTile to="/parent/exam"              icon={IcBook}   label="Tests"          sub="Mock test status"     gradient="bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9]" />
+        <QuickTile to="/parent/exam/leaderboards" icon={IcUsers}  label="Leaderboards"   sub="Rank comparison"      gradient="bg-gradient-to-br from-[#F97316] to-[#C2410C]" />
       </div>
 
       {/* ── Learner Cards ── */}
