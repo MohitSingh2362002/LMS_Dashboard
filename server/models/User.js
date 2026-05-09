@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema(
     linkedLearners: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     avatar: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
-    studentId: { type: String, default: "" }
+    studentId: { type: String, default: "" },
+    sessionVersion: { type: Number, default: 0 }  // incremented on every login — invalidates all old tokens
   },
   { timestamps: true }
 );

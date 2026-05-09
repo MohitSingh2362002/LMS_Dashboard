@@ -136,7 +136,12 @@ const ScheduleItem = ({ item, user }) => {
 
   if (item.liveClass?.status === "live") {
     return (
-      <button className="block w-full text-left" onClick={() => window.open(buildLiveClassJoinUrl(item.liveClass, user), "_blank", "noopener,noreferrer")}>
+      <button className="block w-full text-left" onClick={async () => {
+        try {
+          const url = await buildLiveClassJoinUrl(item.liveClass);
+          window.open(url, "_blank", "noopener,noreferrer");
+        } catch { toast.error("Could not open session. Please try again."); }
+      }}>
         {content}
       </button>
     );
@@ -250,7 +255,12 @@ const LearnerDashboardPage = () => {
           </div>
           {liveClass ? (
             <button
-              onClick={() => window.open(buildLiveClassJoinUrl(liveClass, user), "_blank", "noopener,noreferrer")}
+              onClick={async () => {
+                try {
+                  const url = await buildLiveClassJoinUrl(liveClass);
+                  window.open(url, "_blank", "noopener,noreferrer");
+                } catch { toast.error("Could not open session. Please try again."); }
+              }}
               className="flex items-center gap-3 rounded-xl bg-white/15 px-5 py-3 text-sm font-bold backdrop-blur-sm border border-white/20 hover:bg-white/25 transition"
             >
               <span className="relative flex h-3 w-3">

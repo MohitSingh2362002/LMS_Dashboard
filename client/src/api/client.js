@@ -12,4 +12,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Single-device enforcement: when the server rejects a token because the user
+// logged in on another device, clear the local session and redirect to login.
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401 && err.response?.data?.message === "SESSION_EXPIRED") {
+      localStorage.removeItem("lms_token");
+      window.location.replace("/?session_expired=1");
+    }
+    return Promise.reject(err);
+  }
+);
+
 export default api;

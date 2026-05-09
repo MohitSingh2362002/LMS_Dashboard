@@ -1,12 +1,15 @@
-export const buildLiveClassJoinUrl = (liveClass, user) => {
-  const baseUrl = import.meta.env.VITE_LIVE_CLASS_BASE_URL || "https://localhost:3000";
-  const url = new URL("/", baseUrl);
-  url.searchParams.set("roomName", liveClass?.roomName || liveClass?.roomId || "");
-  url.searchParams.set("displayName", user?.name || "User");
-  url.searchParams.set(
-    "joinAs",
-    user?.role === "learner" ? "participant" : "host"
-  );
+import api from "../api/client";
 
+const LIVE_SESSION_BASE = import.meta.env.VITE_LIVE_CLASS_BASE_URL || "https://localhost:3000";
+
+/**
+ * Requests a one-time join token from the server and returns the livesession URL.
+ * The URL contains only the opaque token — no room name, no role, no display name
+ * is visible in the address bar or browser history.
+ */
+export const buildLiveClassJoinUrl = async (liveClass) => {
+  const { data } = await api.post(`/live-classes/${liveClass._id}/join-token`);
+  const url = new URL("/", LIVE_SESSION_BASE);
+  url.searchParams.set("t", data.token);  // only opaque token — nothing else
   return url.toString();
 };

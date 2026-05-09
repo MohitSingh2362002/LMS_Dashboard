@@ -19,6 +19,12 @@ export const protect = asyncHandler(async (req, res, next) => {
     throw new Error("User account is inactive");
   }
 
+  // Single-device enforcement: reject tokens issued before the last login
+  if (decoded.sessionVersion !== undefined && decoded.sessionVersion !== user.sessionVersion) {
+    res.status(401);
+    throw new Error("SESSION_EXPIRED");
+  }
+
   req.user = user;
   next();
 });

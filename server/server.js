@@ -42,11 +42,21 @@ console.log(".env====>", process.env.CLIENT_URL)
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
-  "http://localhost:5173"   // keep for local dev
-].filter(Boolean).map(url => url.replace(/\/+$/, "")); // remove trailing slashes
+  process.env.LIVE_CLASS_BASE_URL,   // livesession domain (Vercel or custom)
+  "http://localhost:5173",           // Dash dev
+  "http://localhost:3000",           // livesession dev
+  "https://localhost:3000",          // livesession dev (HTTPS / basicSsl)
+  "http://localhost:3002",
+  "https://localhost:3002",
+].filter(Boolean).map(url => url.replace(/\/+$/, ""));
 
 const corsOptions = {
-  origin: allowedOrigins,
+  origin: (origin, cb) => {
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true

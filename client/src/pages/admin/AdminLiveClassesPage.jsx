@@ -136,6 +136,16 @@ const AdminLiveClassesPage = () => {
     return upcoming.filter((c) => isWithinNextWeek(c.scheduledAt));
   }, [activeTab, live, upcoming]);
 
+  // ── Secure join: get one-time token then open livesession ─────────────────
+  const openSession = async (cls) => {
+    try {
+      const url = await buildLiveClassJoinUrl(cls);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Could not open session. Please try again.");
+    }
+  };
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const createClass = async (payload) => {
     setSaving(true);
@@ -144,7 +154,7 @@ const AdminLiveClassesPage = () => {
       toast.success("Live class created");
       setOpen(false);
       refresh();
-      if (payload.isImmediate) window.open(buildLiveClassJoinUrl(data, user), "_blank", "noopener,noreferrer");
+      if (payload.isImmediate) openSession(data);
     } catch (err) {
       toast.error(err.response?.data?.message || "Unable to create class");
     } finally { setSaving(false); }
@@ -217,7 +227,6 @@ const AdminLiveClassesPage = () => {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {tabClasses.map((cls) => {
             const badge = STATUS_BADGE[cls.status] || STATUS_BADGE.ended;
-            const joinUrl = buildLiveClassJoinUrl(cls, user);
             return (
               <div key={cls._id} className="flex flex-col rounded-2xl border border-slate-200/70 bg-white p-4 shadow-card transition-all hover:shadow-cardHover">
                 <div className="flex items-start justify-between gap-2">
@@ -232,7 +241,12 @@ const AdminLiveClassesPage = () => {
                     user={user}
                     onEnd={endClass}
                     onDelete={deleteClass}
-                    onCopy={() => copyToClipboard(joinUrl)}
+                    onCopy={async () => {
+                      try {
+                        const url = await buildLiveClassJoinUrl(cls);
+                        copyToClipboard(url);
+                      } catch { toast.error("Could not generate join link"); }
+                    }}
                   />
                 </div>
 
@@ -261,7 +275,7 @@ const AdminLiveClassesPage = () => {
                   {cls.status === "live" ? (
                     <div className="flex gap-1.5">
                       <button
-                        onClick={() => window.open(joinUrl, "_blank", "noopener,noreferrer")}
+                        onClick={() => openSession(cls)}
                         className="rounded-md bg-brand-primary px-3 py-1 text-[11px] font-bold text-white hover:brightness-110">
                         Join Session →
                       </button>
@@ -272,7 +286,7 @@ const AdminLiveClassesPage = () => {
                     </div>
                   ) : (
                     <button
-                      onClick={() => window.open(joinUrl, "_blank", "noopener,noreferrer")}
+                      onClick={() => openSession(cls)}
                       className="rounded-md bg-brand-surface px-3 py-1 text-[11px] font-semibold text-brand-primary hover:bg-brand-surface/70">
                       Manage Link ↗
                     </button>

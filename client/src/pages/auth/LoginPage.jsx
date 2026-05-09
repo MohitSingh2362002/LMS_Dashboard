@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
@@ -9,6 +9,19 @@ const LoginPage = () => {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "", role: "admin" });
   const [loading, setLoading] = useState(false);
+
+  // Show banner when kicked out due to login on another device
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("session_expired") === "1") {
+      toast("You were signed out because your account was used on another device.", {
+        icon: "🔒",
+        duration: 6000,
+      });
+      // Clean the URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   const submit = async (event) => {
     event.preventDefault();

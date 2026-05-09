@@ -26,10 +26,20 @@ export const login = asyncHandler(async (req, res) => {
     throw new Error("Role mismatch");
   }
 
+  // Increment sessionVersion — any token from a previous login is now invalid
+  const newVersion = (user.sessionVersion || 0) + 1;
+  await User.findByIdAndUpdate(user._id, { sessionVersion: newVersion });
+
   res.json({
-    token: generateToken(user._id),
+    token: generateToken(user._id, newVersion),
     user: sanitizeUser(user)
   });
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  // Incrementing sessionVersion invalidates the current token on all devices
+  await User.findByIdAndUpdate(req.user._id, { $inc: { sessionVersion: 1 } });
+  res.json({ message: "Logged out successfully" });
 });
 
 export const registerLearner = asyncHandler(async (req, res) => {
