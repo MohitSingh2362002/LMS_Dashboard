@@ -32,7 +32,13 @@ router.post("/:id/join-token", protect, async (req, res) => {
   // Sign with ROOM_JOIN_SECRET (shared with livesession via env var).
   // TTL = 5 minutes — plenty of time to open the tab and auto-join.
   const token = jwt.sign(
-    { roomName: liveClass.roomId || liveClass._id.toString(), displayName: req.user.name, joinAs },
+    {
+      roomName:    liveClass.roomId || liveClass._id.toString(),
+      displayName: req.user.name,
+      joinAs,
+      liveClassId: liveClass._id.toString(),
+      courseId:    liveClass.course ? liveClass.course.toString() : null,
+    },
     process.env.ROOM_JOIN_SECRET || process.env.JWT_SECRET,
     { expiresIn: "5m" }
   );

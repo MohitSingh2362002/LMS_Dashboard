@@ -30,6 +30,7 @@ import analyticsRoutes from "./routes/analyticsRoutes.js";
 import announcementRoutes from "./routes/announcementRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import purchaseRoutes from "./routes/purchaseRoutes.js";
+import recordingRoutes from "./routes/recordingRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -102,6 +103,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/purchases", purchaseRoutes);
+app.use("/api/recordings", recordingRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-user", ({ userId }) => {

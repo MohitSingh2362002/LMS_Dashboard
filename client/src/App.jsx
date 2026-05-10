@@ -15,6 +15,7 @@ import AdminReviewsPage from "./pages/admin/AdminReviewsPage";
 import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
 import AdminSupportPage from "./pages/admin/AdminSupportPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
+import AdminRecordingsPage from "./pages/admin/AdminRecordingsPage";
 import SupportPage from "./pages/shared/SupportPage";
 import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
@@ -43,6 +44,7 @@ import LearnerDoubtVaultPage from "./pages/learner/LearnerDoubtVaultPage";
 import LearnerMyCoursesPage from "./pages/learner/LearnerMyCoursesPage";
 import LearnerAllCoursesPage from "./pages/learner/LearnerAllCoursesPage";
 import LearnerStudyMaterialsPage from "./pages/learner/LearnerStudyMaterialsPage";
+import LearnerRecordingsPage from "./pages/learner/LearnerRecordingsPage";
 import ParentCoursesPage from "./pages/parent/ParentCoursesPage";
 import ParentDashboardPage from "./pages/parent/ParentDashboardPage";
 import ParentReportsPage from "./pages/parent/ParentReportsPage";
@@ -99,6 +101,7 @@ function App() {
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="instructor" element={<AdminInstructorPage />} />
         <Route path="live-classes" element={<AdminLiveClassesPage />} />
+        <Route path="recordings" element={<AdminRecordingsPage />} />
         <Route path="questions" element={<AdminQuestionsPage />} />
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="announcements" element={<AdminAnnouncementsPage />} />
@@ -149,6 +152,7 @@ function App() {
         <Route path="courses" element={<LearnerMyCoursesPage />} />
         <Route path="all-courses" element={<LearnerAllCoursesPage />} />
         <Route path="study-materials" element={<LearnerStudyMaterialsPage />} />
+        <Route path="recordings" element={<LearnerRecordingsPage />} />
         <Route path="doubts" element={<LearnerDoubtVaultPage />} />
         <Route path="attendance" element={<AttendanceViewPage />} />
         <Route path="notifications" element={<NotificationsPage />} />

@@ -10,6 +10,8 @@ export default defineConfig({
   // load .env from the monorepo root (one level up from client/)
   envDir: path.resolve(__dirname, ".."),
   server: {
-    port: 5173
+    port: 5173,
+    open: true,
+    allowedHosts: true
   }
 });
