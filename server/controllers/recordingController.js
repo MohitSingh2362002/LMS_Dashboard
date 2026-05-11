@@ -1,32 +1,29 @@
 import crypto from "crypto";
+import axios from "axios";
 import asyncHandler from "express-async-handler";
 import RecordedSession from "../models/RecordedSession.js";
 import LiveClass from "../models/LiveClass.js";
 import Enrollment from "../models/Enrollment.js";
-import Batch from "../models/Batch.js";
 
-const BUNNY_API_KEY       = process.env.BUNNY_STREAM_API_KEY;
-const BUNNY_LIBRARY_ID    = process.env.BUNNY_STREAM_LIBRARY_ID;
-const BUNNY_CDN_HOSTNAME  = process.env.BUNNY_STREAM_CDN_HOSTNAME; // e.g. vz-abc.b-cdn.net
-const BUNNY_API_BASE      = "https://video.bunnycdn.com";
+const BUNNY_API_KEY      = process.env.BUNNY_STREAM_API_KEY;
+const BUNNY_LIBRARY_ID   = process.env.BUNNY_STREAM_LIBRARY_ID;
+const BUNNY_CDN_HOSTNAME = process.env.BUNNY_STREAM_CDN_HOSTNAME; // e.g. vz-0b1ecaad-561.b-cdn.net
+const BUNNY_API_BASE     = "https://video.bunnycdn.com";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function bunnyRequest(method, path, body = null) {
-  const res = await fetch(`${BUNNY_API_BASE}${path}`, {
+  const res = await axios({
     method,
+    url: `${BUNNY_API_BASE}${path}`,
     headers: {
       AccessKey: BUNNY_API_KEY,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
-    ...(body ? { body: JSON.stringify(body) } : {}),
+    ...(body ? { data: body } : {}),
   });
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Bunny API ${method} ${path} → ${res.status}: ${text}`);
-  }
-  return res.json();
+  return res.data;
 }
 
 function buildTusSignature(videoId, expiryTs) {
@@ -132,19 +129,34 @@ export const completeRecording = asyncHandler(async (req, res) => {
   res.json({ message: "Upload complete — video is being processed", recording: recorded });
 });
 
-// ── POST /api/recordings/:id/ready ────────────────────────────────────────────
-// Bunny webhook: called when transcoding is done.
-// Configure this URL in your Bunny Stream library settings.
+// ── POST /api/recordings/webhook/ready ───────────────────────────────────────
+// Bunny Stream webhook — fires when encoding finishes.
+// Bunny POST body: { VideoLibraryId, VideoGuid, Status }
+// Status codes: 0=Created,1=Uploaded,2=Processing,3=Transcoding,4=Finished,5=Error
 export const markReady = asyncHandler(async (req, res) => {
-  // Bunny sends VideoId in the body
-  const { VideoId } = req.body;
-  if (VideoId) {
-    await RecordedSession.updateMany(
-      { bunnyVideoId: VideoId },
-      { $set: { status: "ready" } }
-    );
+  const { VideoGuid, Status } = req.body;
+  console.log("[Bunny webhook] payload:", req.body);
+
+  if (VideoGuid) {
+    if (Status === 4) {
+      // Finished — mark ready
+      await RecordedSession.updateMany(
+        { bunnyVideoId: VideoGuid },
+        { $set: { status: "ready" } }
+      );
+      console.log(`[Bunny webhook] Marked ready: ${VideoGuid}`);
+    } else if (Status === 5) {
+      // Error
+      await RecordedSession.updateMany(
+        { bunnyVideoId: VideoGuid },
+        { $set: { status: "failed" } }
+      );
+      console.log(`[Bunny webhook] Marked failed: ${VideoGuid}`);
+    }
   }
-  res.json({ ok: true });
+
+  // Bunny expects a 200 response
+  res.status(200).json({ ok: true });
 });
 
 // ── GET /api/recordings ───────────────────────────────────────────────────────

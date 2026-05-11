@@ -43,10 +43,11 @@ console.log(".env====>", process.env.CLIENT_URL)
 
 const allowedOrigins = [
   process.env.CLIENT_URL,
-  process.env.LIVE_CLASS_BASE_URL,   // livesession domain (Vercel or custom)
-  "http://localhost:5173",           // Dash dev
-  "http://localhost:3000",           // livesession dev
-  "https://localhost:3000",          // livesession dev (HTTPS / basicSsl)
+  process.env.LIVE_CLASS_BASE_URL,        // livesession Vercel domain
+  "https://lms-five-rho-10.vercel.app",   // livesession (explicit fallback)
+  "http://localhost:5173",                // Dash dev
+  "http://localhost:3000",               // livesession dev
+  "https://localhost:3000",
   "http://localhost:3002",
   "https://localhost:3002",
 ].filter(Boolean).map(url => url.replace(/\/+$/, ""));
