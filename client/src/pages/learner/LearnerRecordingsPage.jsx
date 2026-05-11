@@ -1,170 +1,146 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import {
-  Video, Clock, BookOpen, Play, ChevronDown, ChevronUp,
-  Loader2, Users,
-} from 'lucide-react';
 import { getRecordings } from '../../api/recordings';
 import toast from 'react-hot-toast';
 
-function formatDuration(seconds) {
-  if (!seconds) return '—';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
-}
-function formatDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
-}
+/* ── helpers ── */
+const fmt = (s) => { if (!s) return '0m'; const h = Math.floor(s/3600), m = Math.floor((s%3600)/60); return h > 0 ? `${h}h ${m}m` : `${m}m`; };
+const fmtDate = (d) => new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+const buildUrl = (rec) => rec?.bunnyVideoId && rec?.bunnyLibraryId
+  ? `https://iframe.mediadelivery.net/embed/${rec.bunnyLibraryId}/${rec.bunnyVideoId}?autoplay=false&responsive=true&preload=false`
+  : null;
 
-/** Build Bunny embed URL directly from stored fields — no extra API call needed. */
-function buildEmbedUrl(rec) {
-  if (!rec.bunnyVideoId || !rec.bunnyLibraryId) return null;
-  return `https://iframe.mediadelivery.net/embed/${rec.bunnyLibraryId}/${rec.bunnyVideoId}?autoplay=false&loop=false&muted=false&responsive=true&preload=false`;
-}
+/* ── icons ── */
+const IcPlay   = () => <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6"><polygon points="5 3 19 12 5 21 5 3" /></svg>;
+const IcClose  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>;
+const IcClock  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
+const IcBook   = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5"><path d="M4 19.5A2.5 2.5 0 016.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" /></svg>;
+const IcUsers  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" /></svg>;
+const IcVideo  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M15 10l4.553-2.277A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" /></svg>;
+const IcChev   = ({ open }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9" /></svg>;
 
-/* ── Bunny iframe player ── */
-function BunnyPlayer({ rec }) {
-  const embedUrl = buildEmbedUrl(rec);
-  if (!embedUrl) {
-    return (
-      <div className="w-full aspect-video bg-gray-900 rounded-xl flex items-center justify-center text-gray-500 text-sm">
-        Video not available yet
-      </div>
-    );
-  }
+/* ── Video player modal ── */
+function PlayerModal({ rec, onClose }) {
+  const url = buildUrl(rec);
   return (
-    <div className="w-full aspect-video rounded-xl overflow-hidden shadow-lg">
-      <iframe
-        src={embedUrl}
-        className="w-full h-full"
-        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
-        allowFullScreen
-        title={rec.title}
-      />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-ink/70 backdrop-blur-sm p-4 animate-fadeIn" onClick={onClose}>
+      <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-start justify-between rounded-t-2xl bg-brand-ink px-5 py-4">
+          <div className="min-w-0">
+            <p className="font-semibold text-white leading-snug truncate">{rec.title}</p>
+            <p className="mt-0.5 text-xs text-slate-400">{rec.course?.title} · {fmt(rec.duration)} · {fmtDate(rec.recordedAt)}</p>
+          </div>
+          <button onClick={onClose} className="ml-4 flex-shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"><IcClose /></button>
+        </div>
+        <div className="aspect-video rounded-b-2xl overflow-hidden shadow-2xl bg-slate-900">
+          {url
+            ? <iframe src={url} className="h-full w-full" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture" allowFullScreen title={rec.title} />
+            : <div className="flex h-full items-center justify-center text-slate-500 text-sm">Video not available yet</div>}
+        </div>
+      </div>
     </div>
   );
 }
 
-/* ── Single recording card ── */
-function RecordingCard({ rec }) {
-  const [expanded, setExpanded] = useState(false);
-  const batchNames = rec.batches?.map((b) => b.name).join(', ') || null;
+/* ── Recording card (horizontal) ── */
+function RecordingCard({ rec, onPlay }) {
+  const url = buildUrl(rec);
+  const canPlay = rec.status === 'ready' && !!url;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      {/* Info row */}
-      <div className="flex gap-4 p-4">
-        {/* Thumbnail */}
-        <div
-          className="relative w-40 h-24 flex-shrink-0 rounded-xl overflow-hidden bg-gray-100 cursor-pointer group"
-          onClick={() => setExpanded((v) => !v)}
-        >
-          {rec.thumbnailUrl ? (
-            <img src={rec.thumbnailUrl} alt="thumbnail" className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Video size={28} className="text-gray-400" />
+    <div className="group flex gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-card hover:shadow-cardHover transition-shadow">
+      {/* Thumbnail */}
+      <div
+        onClick={() => canPlay && onPlay(rec)}
+        className={`relative h-24 w-40 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 ${canPlay ? 'cursor-pointer' : ''}`}
+      >
+        {rec.thumbnailUrl
+          ? <img src={rec.thumbnailUrl} alt={rec.title} className="h-full w-full object-cover" />
+          : <div className="flex h-full w-full items-center justify-center text-slate-300"><IcVideo /></div>
+        }
+        {/* Play overlay */}
+        {canPlay && (
+          <div className="absolute inset-0 flex items-center justify-center bg-brand-ink/50 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg text-brand-accent">
+              <IcPlay />
             </div>
-          )}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Play size={28} className="text-white" fill="white" />
           </div>
-        </div>
-
-        {/* Meta */}
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 text-sm leading-snug line-clamp-2">
-            {rec.title}
-          </h3>
-
-          {rec.liveClass?.title && (
-            <p className="text-xs text-gray-500 mt-0.5 truncate">
-              Live class: {rec.liveClass.title}
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <Clock size={12} /> {formatDuration(rec.duration)}
-            </span>
-            {rec.course?.title && (
-              <span className="flex items-center gap-1">
-                <BookOpen size={12} /> {rec.course.title}
-              </span>
-            )}
-            {batchNames && (
-              <span className="flex items-center gap-1">
-                <Users size={12} /> {batchNames}
-              </span>
-            )}
-            <span className="text-gray-400">{formatDate(rec.recordedAt)}</span>
-          </div>
-        </div>
-
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="self-center p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 flex-shrink-0"
-        >
-          {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-        </button>
+        )}
+        {/* Duration badge */}
+        {rec.duration > 0 && (
+          <span className="absolute bottom-1.5 right-1.5 rounded-md bg-brand-ink/80 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {fmt(rec.duration)}
+          </span>
+        )}
       </div>
 
-      {/* Player */}
-      {expanded && (
-        <div className="border-t border-gray-100 p-4 bg-gray-50">
-          <BunnyPlayer rec={rec} />
+      {/* Info */}
+      <div className="flex flex-1 flex-col justify-between min-w-0">
+        <div>
+          <h4 className="font-semibold text-brand-ink leading-snug line-clamp-2 text-sm">{rec.title}</h4>
+          {rec.liveClass?.title && (
+            <p className="mt-0.5 text-[11px] text-slate-400 truncate">Live class: {rec.liveClass.title}</p>
+          )}
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500">
+          <span className="flex items-center gap-1"><IcClock />{fmt(rec.duration)}</span>
+          {rec.batches?.length > 0 && <span className="flex items-center gap-1"><IcUsers />{rec.batches.map(b=>b.name).join(', ')}</span>}
+          <span className="text-slate-400">{fmtDate(rec.recordedAt)}</span>
+        </div>
+      </div>
+
+      {/* Watch button */}
+      {canPlay && (
+        <div className="flex-shrink-0 self-center">
+          <button onClick={() => onPlay(rec)}
+            className="hidden sm:flex items-center gap-2 rounded-xl bg-brand-accent px-3 py-2 text-xs font-semibold text-white shadow-card hover:bg-brand-primary transition-colors opacity-0 group-hover:opacity-100">
+            <IcPlay /> Watch
+          </button>
         </div>
       )}
     </div>
   );
 }
 
-/* ── Course group ── */
-function CourseGroup({ courseName, courseThumbnail, batches, recordings }) {
+/* ── Course section with collapsible recordings list ── */
+function CourseSection({ courseName, thumbnail, batches, items, onPlay }) {
   const [open, setOpen] = useState(true);
-  const batchLabel = batches?.length ? batches.map((b) => b.name).join(', ') : null;
+  const batchLabel = batches?.map(b => b.name).join(' · ') || null;
 
   return (
-    <div className="space-y-3">
-      {/* Course header */}
+    <div className="rounded-2xl border border-slate-200/70 bg-white shadow-card overflow-hidden">
+      {/* Course header — acts as toggle */}
       <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 text-left"
+        onClick={() => setOpen(v => !v)}
+        className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-brand-surface/30 transition-colors"
       >
-        {courseThumbnail ? (
-          <img src={courseThumbnail} alt={courseName}
-            className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
-        ) : (
-          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center flex-shrink-0">
-            <BookOpen size={18} className="text-indigo-500" />
-          </div>
-        )}
+        {/* thumbnail or icon */}
+        {thumbnail
+          ? <img src={thumbnail} alt={courseName} className="h-12 w-12 flex-shrink-0 rounded-xl object-cover border border-slate-200 shadow-card" />
+          : <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-surface text-brand-accent"><IcBook /></div>
+        }
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm truncate">{courseName}</p>
+          <p className="font-bold text-brand-ink">{courseName}</p>
           {batchLabel && (
-            <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
-              <Users size={11} /> {batchLabel}
-            </p>
+            <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400"><IcUsers />{batchLabel}</p>
           )}
         </div>
-        <span className="text-xs text-gray-400 flex-shrink-0">
-          {recordings.length} recording{recordings.length !== 1 ? 's' : ''}
-        </span>
-        {open ? <ChevronUp size={16} className="text-gray-400 flex-shrink-0" />
-               : <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* pill */}
+          <span className="hidden sm:block rounded-full bg-brand-surface px-2.5 py-1 text-xs font-semibold text-brand-accent">
+            {items.length} recording{items.length !== 1 ? 's' : ''}
+          </span>
+          <IcChev open={open} />
+        </div>
       </button>
 
+      {/* recordings list */}
       {open && (
-        <div className="space-y-3 pl-13">
-          {recordings.map((rec) => (
-            <RecordingCard key={rec._id} rec={rec} />
+        <div className="border-t border-slate-100 divide-y divide-slate-50">
+          {items.map(rec => (
+            <div key={rec._id} className="px-5 py-3">
+              <RecordingCard rec={rec} onPlay={onPlay} />
+            </div>
           ))}
         </div>
       )}
@@ -176,10 +152,11 @@ function CourseGroup({ courseName, courseThumbnail, batches, recordings }) {
 export default function LearnerRecordingsPage() {
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get('courseId');
-
   const [recordings, setRecordings] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
+  const [playing, setPlaying]       = useState(null);
+  const [search, setSearch]         = useState('');
 
   useEffect(() => {
     setLoading(true);
@@ -189,61 +166,94 @@ export default function LearnerRecordingsPage() {
       .finally(() => setLoading(false));
   }, [courseId]);
 
-  // Group by course
-  const byCourse = recordings.reduce((acc, rec) => {
-    const key  = rec.course?._id || 'other';
-    const name = rec.course?.title || 'Other';
-    if (!acc[key]) {
-      acc[key] = {
-        name,
-        thumbnail: rec.course?.thumbnail || null,
-        batches:   rec.batches || [],
-        items:     [],
-      };
+  const byCourse = useMemo(() => {
+    const filtered = search
+      ? recordings.filter(r => r.title?.toLowerCase().includes(search.toLowerCase()) || r.course?.title?.toLowerCase().includes(search.toLowerCase()))
+      : recordings;
+    const map = {};
+    for (const r of filtered) {
+      const key = r.course?._id || 'other';
+      if (!map[key]) map[key] = { name: r.course?.title || 'Other', thumbnail: r.course?.thumbnail || null, batches: r.batches || [], items: [] };
+      map[key].items.push(r);
     }
-    acc[key].items.push(rec);
-    return acc;
-  }, {});
+    return map;
+  }, [recordings, search]);
+
+  const totalReady = recordings.length;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-          <Video size={24} className="text-indigo-500" />
-          Recorded Sessions
-        </h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Watch recordings of past live classes for your enrolled courses
-        </p>
+    <div className="space-y-6 animate-fadeIn">
+      {/* ── Hero header ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent px-6 py-8 text-white shadow-panel">
+        <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/5" />
+        <div className="absolute -right-2 top-10 h-24 w-24 rounded-full bg-white/5" />
+        <div className="relative z-10 flex items-center gap-5">
+          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
+            <IcVideo />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold">Recorded Sessions</h1>
+            <p className="mt-0.5 text-sm text-white/70">Watch past live classes from your enrolled courses</p>
+          </div>
+          {totalReady > 0 && (
+            <div className="ml-auto hidden sm:block text-right">
+              <p className="text-3xl font-bold">{totalReady}</p>
+              <p className="text-xs text-white/60">Recording{totalReady !== 1 ? 's' : ''} available</p>
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* ── Search ── */}
+      {!loading && totalReady > 0 && (
+        <div className="relative">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search sessions or courses…"
+            className="w-full rounded-xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-sm text-brand-ink placeholder:text-slate-400 shadow-card focus:border-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-accent/20" />
+        </div>
+      )}
+
+      {/* ── Loading ── */}
       {loading && (
-        <div className="flex items-center justify-center py-16">
-          <Loader2 size={32} className="text-indigo-500 animate-spin" />
+        <div className="flex flex-col items-center justify-center py-24 gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-brand-accent border-t-transparent animate-spin" />
+          <p className="text-sm text-slate-400">Loading your recordings…</p>
         </div>
       )}
 
+      {/* ── Error ── */}
       {error && !loading && (
-        <div className="text-center py-16 text-red-500">{error}</div>
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">{error}</div>
       )}
 
-      {!loading && !error && recordings.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <Video size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="font-medium">No recordings available yet</p>
-          <p className="text-sm mt-1">Recorded live sessions will appear here once they are ready</p>
+      {/* ── Empty ── */}
+      {!loading && !error && totalReady === 0 && (
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-200/70 bg-white py-24 gap-3 shadow-card">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-surface text-brand-accent opacity-50">
+            <IcVideo />
+          </div>
+          <p className="font-semibold text-slate-600">No recordings yet</p>
+          <p className="text-sm text-slate-400 text-center max-w-xs">Recorded live sessions will appear here once they finish processing</p>
         </div>
       )}
 
-      {!loading && !error && Object.entries(byCourse).map(([cid, group]) => (
-        <CourseGroup
-          key={cid}
-          courseName={group.name}
-          courseThumbnail={group.thumbnail}
-          batches={group.batches}
-          recordings={group.items}
-        />
+      {/* ── No search results ── */}
+      {!loading && !error && totalReady > 0 && Object.keys(byCourse).length === 0 && search && (
+        <div className="rounded-2xl border border-slate-200/70 bg-white px-5 py-8 text-center shadow-card">
+          <p className="font-medium text-slate-500">No recordings match "<span className="text-brand-ink">{search}</span>"</p>
+        </div>
+      )}
+
+      {/* ── Course sections ── */}
+      {!loading && !error && Object.entries(byCourse).map(([key, group]) => (
+        <CourseSection key={key} courseName={group.name} thumbnail={group.thumbnail}
+          batches={group.batches} items={group.items} onPlay={setPlaying} />
       ))}
+
+      {/* ── Player modal ── */}
+      {playing && <PlayerModal rec={playing} onClose={() => setPlaying(null)} />}
     </div>
   );
 }
