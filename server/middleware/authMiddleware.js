@@ -49,8 +49,9 @@ export const authorize =
 export const protectRecording = (req, res, next) => {
   const header = req.headers.authorization;
   if (!header?.startsWith("Bearer ")) {
+    console.warn("[protectRecording] No Bearer token in Authorization header");
     res.status(401);
-    return next(new Error("Recording token required"));
+    return next(new Error("Recording token missing — please re-join the session from Dash"));
   }
 
   const token = header.split(" ")[1];
@@ -58,9 +59,11 @@ export const protectRecording = (req, res, next) => {
     const secret = process.env.ROOM_JOIN_SECRET || process.env.JWT_SECRET;
     const decoded = jwt.verify(token, secret);
     if (decoded.type !== "recording") {
+      console.warn("[protectRecording] Token type is not 'recording':", decoded.type);
       res.status(401);
-      return next(new Error("Invalid recording token"));
+      return next(new Error("Invalid recording token type"));
     }
+    console.log("[protectRecording] OK — instructorId:", decoded.instructorId, "courseId:", decoded.courseId);
     req.recordingClaims = {
       liveClassId:  decoded.liveClassId,
       courseId:     decoded.courseId,
@@ -68,7 +71,8 @@ export const protectRecording = (req, res, next) => {
     };
     next();
   } catch (err) {
+    console.warn("[protectRecording] JWT verify failed:", err.message);
     res.status(401);
-    next(new Error("Recording token invalid or expired"));
+    next(new Error(`Recording token invalid or expired: ${err.message}`));
   }
 };

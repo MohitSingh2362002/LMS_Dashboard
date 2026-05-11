@@ -13,17 +13,30 @@ const BUNNY_API_BASE     = "https://video.bunnycdn.com";
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 async function bunnyRequest(method, path, body = null) {
-  const res = await axios({
-    method,
-    url: `${BUNNY_API_BASE}${path}`,
-    headers: {
-      AccessKey: BUNNY_API_KEY,
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    ...(body ? { data: body } : {}),
-  });
-  return res.data;
+  try {
+    const res = await axios({
+      method,
+      url: `${BUNNY_API_BASE}${path}`,
+      headers: {
+        AccessKey: BUNNY_API_KEY,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      ...(body ? { data: body } : {}),
+    });
+    return res.data;
+  } catch (err) {
+    const status  = err.response?.status;
+    const bunnyMsg = err.response?.data?.Message || err.response?.data?.message || err.message;
+    console.error(`[Bunny API] ${method} ${path} → ${status ?? 'network error'}: ${bunnyMsg}`);
+    if (status === 401) {
+      throw new Error(
+        "Bunny Stream API key is invalid or does not have access to this library. " +
+        "Check BUNNY_STREAM_API_KEY and BUNNY_STREAM_LIBRARY_ID in your .env file."
+      );
+    }
+    throw new Error(`Bunny API error (${status ?? 'network'}): ${bunnyMsg}`);
+  }
 }
 
 function buildTusSignature(videoId, expiryTs) {
