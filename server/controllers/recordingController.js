@@ -4,6 +4,8 @@ import asyncHandler from "express-async-handler";
 import RecordedSession from "../models/RecordedSession.js";
 import LiveClass from "../models/LiveClass.js";
 import Enrollment from "../models/Enrollment.js";
+import Course from "../models/Course.js";
+import Batch from "../models/Batch.js";
 
 const BUNNY_API_KEY      = process.env.BUNNY_STREAM_API_KEY;
 const BUNNY_LIBRARY_ID   = process.env.BUNNY_STREAM_LIBRARY_ID;
@@ -64,8 +66,19 @@ export const initRecording = asyncHandler(async (req, res) => {
     throw new Error("courseId is required");
   }
 
-  // 1. Create video entry in Bunny Stream
-  const videoTitle = title || `Session ${new Date().toISOString()}`;
+  // 1. Resolve a human-readable title from the live class record
+  let videoTitle = title; // caller may pass a title
+  if (!videoTitle && liveClassId) {
+    const lc = await LiveClass.findById(liveClassId).select("title").lean();
+    if (lc?.title) {
+      const dateStr = new Date().toLocaleDateString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric",
+      });
+      videoTitle = `${lc.title} — ${dateStr}`;
+    }
+  }
+  videoTitle = videoTitle || `Session — ${new Date().toLocaleString("en-IN")}`;
+
   let bunnyVideoId = null;
   let playbackUrl  = null;
   let thumbnailUrl = null;
@@ -184,23 +197,56 @@ export const getRecordings = asyncHandler(async (req, res) => {
     const enrolledCourseIds = enrollments.map((e) => e.course.toString());
 
     if (courseId && !enrolledCourseIds.includes(courseId)) {
-      return res.json([]); // not enrolled → empty
+      return res.json([]);
     }
     if (!courseId) {
       filter.course = { $in: enrolledCourseIds };
     }
     filter.status = "ready"; // learners only see ready recordings
   } else if (req.user.role === "instructor") {
-    filter.instructor = req.user._id;
+    // Instructor sees: recordings they made + recordings for courses they teach
+    const instructorCourseIds = await Course.find({ instructor: req.user._id }).distinct("_id");
+    const orConditions = [
+      { instructor: req.user._id },
+      { course: { $in: instructorCourseIds } },
+    ];
+    if (courseId) {
+      // Already filtered by courseId above — just ensure they can access this course
+      filter.$or = orConditions;
+    } else {
+      filter.$or = orConditions;
+    }
   }
+  // Admin: no extra filter — sees everything
 
   const recordings = await RecordedSession.find(filter)
     .populate("course",    "title thumbnail")
     .populate("liveClass", "title scheduledAt")
     .populate("instructor","name")
-    .sort({ recordedAt: -1 });
+    .sort({ recordedAt: -1 })
+    .lean();
 
-  res.json(recordings);
+  // ── Attach batch info for each recording ───────────────────────────────────
+  // A batch belongs to a course + has a mentor (instructor). We match on both.
+  const courseIds = [...new Set(recordings.map((r) => r.course?._id?.toString()).filter(Boolean))];
+  const batches   = await Batch.find({ course: { $in: courseIds } })
+    .populate("mentor", "name")
+    .lean();
+
+  // Build map: courseId → batch[]
+  const batchByCourse = {};
+  for (const b of batches) {
+    const cid = b.course.toString();
+    if (!batchByCourse[cid]) batchByCourse[cid] = [];
+    batchByCourse[cid].push({ _id: b._id, name: b.name, mentor: b.mentor });
+  }
+
+  const enriched = recordings.map((r) => ({
+    ...r,
+    batches: batchByCourse[r.course?._id?.toString()] || [],
+  }));
+
+  res.json(enriched);
 });
 
 // ── GET /api/recordings/:id ───────────────────────────────────────────────────

@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import {
   Video, Trash2, ExternalLink, Clock, HardDrive,
-  CheckCircle2, Loader2, AlertCircle, RefreshCw,
+  CheckCircle2, Loader2, AlertCircle, RefreshCw, Users,
 } from 'lucide-react';
 import { getRecordings, deleteRecording } from '../../api/recordings';
 import toast from 'react-hot-toast';
+
+function buildEmbedUrl(rec) {
+  if (!rec.bunnyVideoId || !rec.bunnyLibraryId) return null;
+  return `https://iframe.mediadelivery.net/embed/${rec.bunnyLibraryId}/${rec.bunnyVideoId}?autoplay=false&responsive=true`;
+}
 
 function formatDuration(s) {
   if (!s) return '—';
@@ -98,6 +103,7 @@ export default function AdminRecordingsPage() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Title</th>
                 <th className="text-left px-4 py-3 font-medium">Course</th>
+                <th className="text-left px-4 py-3 font-medium">Batch</th>
                 <th className="text-left px-4 py-3 font-medium">Instructor</th>
                 <th className="text-left px-4 py-3 font-medium">Duration</th>
                 <th className="text-left px-4 py-3 font-medium">Size</th>
@@ -119,6 +125,11 @@ export default function AdminRecordingsPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                       {rec.course?.title || '—'}
+                    </td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">
+                      {rec.batches?.length
+                        ? rec.batches.map((b) => b.name).join(', ')
+                        : <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                       {rec.instructor?.name || '—'}
@@ -144,9 +155,9 @@ export default function AdminRecordingsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">
-                        {rec.status === 'ready' && rec.playbackUrl && (
+                        {rec.status === 'ready' && buildEmbedUrl(rec) && (
                           <button
-                            onClick={() => setEmbedOpen({ id: rec._id, url: `https://iframe.mediadelivery.net/embed/${rec.bunnyLibraryId}/${rec.bunnyVideoId}?autoplay=false&responsive=true` })}
+                            onClick={() => setEmbedOpen({ id: rec._id, url: buildEmbedUrl(rec) })}
                             className="p-1.5 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-indigo-500 transition-colors"
                             title="Preview"
                           >

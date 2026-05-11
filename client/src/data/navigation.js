@@ -14,6 +14,7 @@ export const navigationByRole = {
     { label: "Instructor",       to: "/admin/instructor",         icon: "instructor" },
     { label: "Parents",          to: "/admin/users?role=parent",  icon: "parents"    },
     { label: "Live Classes",     to: "/admin/live-classes",       icon: "live"       },
+    { label: "Recordings",       to: "/admin/recordings",         icon: "recordings" },
     { label: "Reviews",          to: "/admin/reviews",            icon: "reviews"    },
     { label: "Announcements",    to: "/admin/announcements",      icon: "bell"       },
     { label: "Support",          to: "/admin/support",            icon: "doubts"     },
@@ -30,6 +31,7 @@ export const navigationByRole = {
     { label: "Attendance",   to: "/instructor/attendance",        icon: "attendance" },
     { label: "Parent Chat",  to: "/instructor/chat",              icon: "chat"       },
     { label: "Live Classes", to: "/instructor/live-classes",      icon: "live"       },
+    { label: "Recordings",   to: "/instructor/recordings",        icon: "recordings" },
     { label: "Support",      to: "/instructor/support",           icon: "chat"       },
   ],
   learner: [
@@ -41,6 +43,7 @@ export const navigationByRole = {
     { label: "Mock Tests",      to: "/learner/exam",              icon: "tests"       },
     { label: "Doubts",          to: "/learner/doubts",            icon: "doubts"      },
     { label: "Leaderboard",     to: "/learner/exam/leaderboards", icon: "leaderboard" },
+    { label: "Recordings",      to: "/learner/recordings",        icon: "recordings"  },
     { label: "Attendance",      to: "/learner/attendance",        icon: "attendance"  },
     { label: "Support",         to: "/learner/support",           icon: "chat"        },
   ],

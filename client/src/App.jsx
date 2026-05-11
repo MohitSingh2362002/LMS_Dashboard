@@ -32,6 +32,7 @@ import InstructorMigrationRequestsPage from "./pages/instructor/InstructorMigrat
 import InstructorLiveClassesPage from "./pages/instructor/InstructorLiveClassesPage";
 import InstructorCourseResourcesPage from "./pages/instructor/InstructorCourseResourcesPage";
 import InstructorQuestionsPage from "./pages/instructor/InstructorQuestionsPage";
+import InstructorRecordingsPage from "./pages/instructor/InstructorRecordingsPage";
 import LearnerDashboardPage from "./pages/learner/LearnerDashboardPage";
 import LearnerBatchesPage from "./pages/learner/LearnerBatchesPage";
 import CourseViewerPage from "./pages/learner/CourseViewerPage";
@@ -130,6 +131,7 @@ function App() {
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="resources" element={<InstructorCourseResourcesPage />} />
         <Route path="live-classes" element={<InstructorLiveClassesPage />} />
+        <Route path="recordings" element={<InstructorRecordingsPage />} />
         <Route path="questions" element={<InstructorQuestionsPage />} />
         <Route path="support" element={<SupportPage />} />
       </Route>

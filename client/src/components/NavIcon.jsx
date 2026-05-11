@@ -17,7 +17,8 @@ const paths = {
   security: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   bell: "M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0",
   resources: "M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z",
-  reports: "M3 3v18h18M7 14l4-4 4 4 5-5"
+  reports: "M3 3v18h18M7 14l4-4 4 4 5-5",
+  recordings: "M15 10l4.553-2.277A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"
 };
 
 const NavIcon = ({ name, className = "h-5 w-5" }) => {
