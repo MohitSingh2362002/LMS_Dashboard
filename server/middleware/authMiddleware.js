@@ -39,3 +39,36 @@ export const authorize =
 
     next();
   };
+
+/**
+ * Middleware for the recording-specific JWT issued by /api/live-classes/:id/join-token.
+ * Payload: { type: "recording", liveClassId, courseId, instructorId }
+ * Signed with ROOM_JOIN_SECRET (same key used by livesession to verify join tokens).
+ * Sets req.recordingClaims = { liveClassId, courseId, instructorId }.
+ */
+export const protectRecording = (req, res, next) => {
+  const header = req.headers.authorization;
+  if (!header?.startsWith("Bearer ")) {
+    res.status(401);
+    return next(new Error("Recording token required"));
+  }
+
+  const token = header.split(" ")[1];
+  try {
+    const secret = process.env.ROOM_JOIN_SECRET || process.env.JWT_SECRET;
+    const decoded = jwt.verify(token, secret);
+    if (decoded.type !== "recording") {
+      res.status(401);
+      return next(new Error("Invalid recording token"));
+    }
+    req.recordingClaims = {
+      liveClassId:  decoded.liveClassId,
+      courseId:     decoded.courseId,
+      instructorId: decoded.instructorId,
+    };
+    next();
+  } catch (err) {
+    res.status(401);
+    next(new Error("Recording token invalid or expired"));
+  }
+};

@@ -1,5 +1,5 @@
 import express from "express";
-import { protect, authorize } from "../middleware/authMiddleware.js";
+import { protect, authorize, protectRecording } from "../middleware/authMiddleware.js";
 import {
   initRecording,
   completeRecording,
@@ -14,13 +14,13 @@ const router = express.Router();
 // ── Bunny webhook (no auth — verify via shared secret if needed) ──
 router.post("/webhook/ready", markReady);
 
-// ── Protected routes ──
-router.use(protect);
+// ── Host upload routes — authenticated with recording JWT (not user JWT) ──
+// livesession sends the recording_token stored in localStorage as Bearer token.
+router.post("/init",     protectRecording, initRecording);
+router.post("/complete", protectRecording, completeRecording);
 
-// Host creates recording entry + gets TUS credentials
-router.post("/init",     authorize("admin", "instructor"), initRecording);
-// Host confirms upload finished
-router.post("/complete", authorize("admin", "instructor"), completeRecording);
+// ── Dash user routes — authenticated with normal user JWT ──
+router.use(protect);
 
 // List recordings (admin sees all, instructor sees own, learner sees enrolled)
 router.get("/",    getRecordings);

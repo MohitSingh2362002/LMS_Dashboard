@@ -12,10 +12,9 @@ export const buildLiveClassJoinUrl = async (liveClass) => {
   const url = new URL("/", LIVE_SESSION_BASE);
   url.searchParams.set("t", data.token);
 
-  // Pass the Dash auth token so livesession can call /api/recordings/* on the host's behalf.
-  // Stored in livesession's own localStorage under the same key.
-  const dashAuth = localStorage.getItem("lms_token");
-  if (dashAuth) url.searchParams.set("auth", dashAuth);
+  // Pass the recording JWT (host only) — livesession stores it and uses it
+  // to authenticate /api/recordings/* calls without needing the user's Dash token.
+  if (data.recordingToken) url.searchParams.set("rt", data.recordingToken);
 
   return url.toString();
 };

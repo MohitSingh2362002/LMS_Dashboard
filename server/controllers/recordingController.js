@@ -36,26 +36,19 @@ function buildTusSignature(videoId, expiryTs) {
 
 // ── POST /api/recordings/init ─────────────────────────────────────────────────
 // Called by livesession host right after stopping recording.
+// Authenticated via recording JWT (req.recordingClaims set by protectRecording middleware).
 // Creates a Bunny video entry + DB record, returns TUS upload credentials.
 export const initRecording = asyncHandler(async (req, res) => {
-  const { liveClassId, courseId, title, duration, size } = req.body;
+  // Claims come from the recording JWT; body values are used only as fallbacks / extras.
+  const claims     = req.recordingClaims; // { liveClassId, courseId, instructorId }
+  const liveClassId = claims.liveClassId  || req.body.liveClassId || null;
+  const courseId    = claims.courseId     || req.body.courseId    || null;
+  const instructorId = claims.instructorId;
+  const { title, duration, size } = req.body;
 
   if (!courseId) {
     res.status(400);
     throw new Error("courseId is required");
-  }
-
-  // Verify the live class belongs to this instructor (if provided)
-  if (liveClassId) {
-    const lc = await LiveClass.findById(liveClassId);
-    if (
-      lc &&
-      lc.instructor.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
-    ) {
-      res.status(403);
-      throw new Error("Not authorised to record this session");
-    }
   }
 
   // 1. Create video entry in Bunny Stream
@@ -80,7 +73,7 @@ export const initRecording = asyncHandler(async (req, res) => {
     title: videoTitle,
     liveClass:     liveClassId || null,
     course:        courseId,
-    instructor:    req.user._id,
+    instructor:    instructorId,
     bunnyVideoId,
     bunnyLibraryId: BUNNY_LIBRARY_ID || null,
     playbackUrl,
@@ -108,20 +101,22 @@ export const initRecording = asyncHandler(async (req, res) => {
 
 // ── POST /api/recordings/complete ─────────────────────────────────────────────
 // Called by livesession after TUS upload finishes.
+// Authenticated via recording JWT (req.recordingClaims).
 export const completeRecording = asyncHandler(async (req, res) => {
   const { recordedSessionId, duration, size } = req.body;
+  const { instructorId } = req.recordingClaims;
 
   const recorded = await RecordedSession.findById(recordedSessionId);
   if (!recorded) {
     res.status(404);
     throw new Error("Recording not found");
   }
-  if (recorded.instructor.toString() !== req.user._id.toString() && req.user.role !== "admin") {
+  if (recorded.instructor.toString() !== instructorId) {
     res.status(403);
     throw new Error("Not authorised");
   }
 
-  recorded.status   = "processing"; // Bunny will transcode
+  recorded.status = "processing"; // Bunny will transcode
   if (duration) recorded.duration = duration;
   if (size)     recorded.size     = size;
   await recorded.save();
