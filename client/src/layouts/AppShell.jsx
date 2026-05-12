@@ -189,7 +189,7 @@ const AppShell = () => {
   const unreadCount = notifications.length;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-brand-background text-brand-ink">
+    <div data-portal-role={user.role} className="flex h-screen overflow-hidden bg-brand-background text-brand-ink">
       {/* Global overlays */}
       {showSearch && <SearchOverlay navItems={navItems} onClose={() => setShowSearch(false)} />}
       {showQuickAction && <QuickActionMenu role={user.role} onClose={() => setShowQuickAction(false)} />}

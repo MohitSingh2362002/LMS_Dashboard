@@ -200,11 +200,11 @@ const ParentDashboardPage = () => {
   if (loading) return <Loader variant="skeleton" label="Loading parent dashboard…" />;
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8 sm:space-y-6">
 
       {/* ── Hero ── */}
       <div
-        className="relative overflow-hidden rounded-2xl p-7 text-white"
+        className="relative overflow-hidden rounded-2xl p-5 text-white sm:p-7"
         style={{ background: "linear-gradient(135deg, #0D9488 0%, #0F766E 40%, #134E4A 100%)" }}
       >
         {/* Dot grid */}
@@ -222,11 +222,11 @@ const ParentDashboardPage = () => {
           <p className="mt-1.5 text-sm text-white/75">
             Course progress, batch details & test results — all in one view.
           </p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Link to="/parent/reports" className="rounded-xl bg-white px-4 py-2 text-xs font-bold text-teal-700 hover:bg-teal-50 transition">
+          <div className="mt-5 grid gap-3 sm:flex sm:flex-wrap">
+            <Link to="/parent/reports" className="rounded-xl bg-white px-4 py-2 text-center text-xs font-bold text-teal-700 hover:bg-teal-50 transition">
               Growth Reports
             </Link>
-            <Link to="/parent/exam" className="rounded-xl border border-white/40 bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-white/20 transition">
+            <Link to="/parent/exam" className="rounded-xl border border-white/40 bg-white/10 px-4 py-2 text-center text-xs font-bold text-white hover:bg-white/20 transition">
               View Tests
             </Link>
           </div>
@@ -257,7 +257,7 @@ const ParentDashboardPage = () => {
         />
       ) : (
         <section>
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-extrabold text-brand-ink">Linked Learners</h2>
             <span className="rounded-full bg-teal-50 px-3 py-0.5 text-xs font-bold text-teal-700">
               {learners.length} learner{learners.length !== 1 ? "s" : ""}
@@ -279,7 +279,7 @@ const ParentDashboardPage = () => {
       {/* ── All Enrollments Table (if many) ── */}
       {enrollments.length > 0 && (
         <section className="rounded-2xl border border-slate-200/70 bg-white shadow-card overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4 border-b border-slate-100 sm:px-5">
             <h2 className="text-sm font-extrabold text-brand-ink">Course Enrollments</h2>
             <span className="text-[11px] text-slate-500">{enrollments.length} total</span>
           </div>
@@ -288,7 +288,7 @@ const ParentDashboardPage = () => {
               const pct = e.progress || 0;
               const pColor = pct >= 80 ? "#10B981" : pct >= 50 ? "#0D9488" : "#F59E0B";
               return (
-                <div key={e._id} className="flex items-center gap-4 px-5 py-3.5">
+                <div key={e._id} className="flex items-center gap-3 px-4 py-3.5 sm:gap-4 sm:px-5">
                   {/* Learner avatar */}
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-50 text-[11px] font-bold text-teal-700">
                     {(e.learner?.name || "?").slice(0, 2).toUpperCase()}
@@ -297,8 +297,8 @@ const ParentDashboardPage = () => {
                     <p className="truncate text-xs font-semibold text-brand-ink">{e.learner?.name}</p>
                     <p className="truncate text-[11px] text-slate-500">{e.course?.title || "Course"}</p>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <div className="w-24 h-1.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+                    <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100 sm:w-24">
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: pColor }} />
                     </div>
                     <span className="w-9 text-right text-[11px] font-bold" style={{ color: pColor }}>{pct}%</span>

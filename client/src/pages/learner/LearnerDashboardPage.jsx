@@ -227,7 +227,7 @@ const LearnerDashboardPage = () => {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="space-y-7 pb-8">
+    <div className="space-y-5 pb-8 sm:space-y-7">
 
       {/* Enroll modal */}
       {enrollTarget && (
@@ -241,7 +241,7 @@ const LearnerDashboardPage = () => {
       )}
 
       {/* ── Welcome Hero ── */}
-      <div className="relative overflow-hidden rounded-2xl px-7 py-6 text-white shadow-panel" style={{ background: "linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%)" }}>
+      <div className="relative overflow-hidden rounded-2xl px-4 py-5 text-white shadow-panel sm:px-7 sm:py-6" style={{ background: "linear-gradient(135deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%)" }}>
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: "radial-gradient(circle at 80% 50%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }}
         />
@@ -261,7 +261,7 @@ const LearnerDashboardPage = () => {
                   window.open(url, "_blank", "noopener,noreferrer");
                 } catch { toast.error("Could not open session. Please try again."); }
               }}
-              className="flex items-center gap-3 rounded-xl bg-white/15 px-5 py-3 text-sm font-bold backdrop-blur-sm border border-white/20 hover:bg-white/25 transition"
+              className="flex w-full items-center justify-between gap-3 rounded-xl bg-white/15 px-4 py-3 text-sm font-bold backdrop-blur-sm border border-white/20 hover:bg-white/25 transition sm:w-auto sm:justify-start sm:px-5"
             >
               <span className="relative flex h-3 w-3">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
@@ -273,7 +273,7 @@ const LearnerDashboardPage = () => {
               </svg>
             </button>
           ) : (
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 px-5 py-3 text-sm text-white/60 border border-white/10">
+            <div className="flex w-full items-center gap-2 rounded-xl bg-white/10 px-4 py-3 text-sm text-white/70 border border-white/10 sm:w-auto sm:px-5">
               <IcVideo />
               No live class right now
             </div>
@@ -283,9 +283,9 @@ const LearnerDashboardPage = () => {
 
       {/* ── Announcements strip ── */}
       {announcements.length > 0 && (
-        <div className="flex items-center gap-3 overflow-hidden rounded-xl border border-amber-200 bg-amber-50 px-5 py-3">
+        <div className="flex items-start gap-3 overflow-hidden rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 sm:items-center sm:px-5">
           <span className="shrink-0 text-lg">📢</span>
-          <p className="flex-1 truncate text-sm font-medium text-amber-800">
+            <p className="flex-1 text-sm font-medium text-amber-800 sm:truncate">
             <span className="font-bold">{announcements[0].title}: </span>
             {announcements[0].message}
           </p>
@@ -302,7 +302,7 @@ const LearnerDashboardPage = () => {
 
       {/* ── Study Zone ── */}
       <section>
-        <div className="mb-4 flex items-end justify-between">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-brand-ink">Study Zone</h2>
             <p className="text-xs text-slate-500">Quick access to your academic tools</p>
@@ -318,7 +318,7 @@ const LearnerDashboardPage = () => {
 
       {/* ── Recommended Courses ── */}
       <section>
-        <div className="mb-4 flex items-center justify-between">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-extrabold text-brand-ink">Recommended Courses</h2>
             <p className="text-xs text-slate-500">Curated published courses — not yet enrolled</p>
@@ -358,7 +358,7 @@ const LearnerDashboardPage = () => {
 
         {/* Weekly Schedule */}
         <section className="rounded-2xl border border-slate-200/70 bg-white p-6 shadow-card">
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-base font-extrabold text-brand-ink">Weekly Schedule</h2>
               <p className="text-xs text-slate-500">Upcoming classes and tests</p>

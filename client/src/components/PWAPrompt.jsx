@@ -35,15 +35,15 @@ const IcClose = () => (
 // ── shared toast shell ──────────────────────────────────────────────────────
 function PWAToast({ icon, title, body, actions, onDismiss }) {
   return (
-    <div className="fixed bottom-4 left-1/2 z-[9999] w-[calc(100vw-2rem)] max-w-sm -translate-x-1/2 animate-fadeIn">
-      <div className="flex items-start gap-3 rounded-2xl bg-brand-ink p-4 shadow-panel">
+    <div className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-[9999] animate-fadeIn sm:left-1/2 sm:right-auto sm:w-[calc(100vw-2rem)] sm:max-w-sm sm:-translate-x-1/2">
+      <div className="flex max-h-[calc(100vh-2rem)] items-start gap-3 overflow-y-auto rounded-2xl bg-brand-ink p-3 shadow-panel sm:p-4">
         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-accent/20 text-brand-accent">
           {icon}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold text-white">{title}</p>
           <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">{body}</p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {actions}
           </div>
         </div>
