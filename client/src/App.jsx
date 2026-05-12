@@ -16,6 +16,7 @@ import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
 import AdminSupportPage from "./pages/admin/AdminSupportPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import AdminRecordingsPage from "./pages/admin/AdminRecordingsPage";
+import AdminCourseVideosPage from "./pages/admin/AdminCourseVideosPage";
 import SupportPage from "./pages/shared/SupportPage";
 import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
@@ -99,6 +100,7 @@ function App() {
         <Route path="security" element={<SecurityAuditPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="courses" element={<AdminCoursesPage />} />
+        <Route path="courses/:courseId/videos" element={<AdminCourseVideosPage />} />
         <Route path="users" element={<AdminUsersPage />} />
         <Route path="instructor" element={<AdminInstructorPage />} />
         <Route path="live-classes" element={<AdminLiveClassesPage />} />

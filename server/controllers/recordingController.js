@@ -6,6 +6,7 @@ import LiveClass from "../models/LiveClass.js";
 import Enrollment from "../models/Enrollment.js";
 import Course from "../models/Course.js";
 import Batch from "../models/Batch.js";
+// Course model is reused below to mark courseVideos as ready via the webhook
 
 const BUNNY_API_KEY      = process.env.BUNNY_STREAM_API_KEY;
 const BUNNY_LIBRARY_ID   = process.env.BUNNY_STREAM_LIBRARY_ID;
@@ -156,21 +157,33 @@ export const completeRecording = asyncHandler(async (req, res) => {
 // Status codes: 0=Created,1=Uploaded,2=Processing,3=Transcoding,4=Finished,5=Error
 export const markReady = asyncHandler(async (req, res) => {
   const { VideoGuid, Status } = req.body;
-  console.log("[Bunny webhook] payload:", req.body);
+  const statusCode = Number(Status); // Bunny may send string or number
+  console.log("[Bunny webhook] payload:", req.body, "→ statusCode:", statusCode);
 
   if (VideoGuid) {
-    if (Status === 4) {
-      // Finished — mark ready
+    if (statusCode === 4) {
+      // Finished — mark ready on live-session recordings
       await RecordedSession.updateMany(
         { bunnyVideoId: VideoGuid },
         { $set: { status: "ready" } }
       );
+      // Also mark ready on any course video with this bunnyVideoId
+      await Course.updateMany(
+        { "courseVideos.bunnyVideoId": VideoGuid },
+        { $set: { "courseVideos.$[v].status": "ready" } },
+        { arrayFilters: [{ "v.bunnyVideoId": VideoGuid }] }
+      );
       console.log(`[Bunny webhook] Marked ready: ${VideoGuid}`);
-    } else if (Status === 5) {
+    } else if (statusCode === 5) {
       // Error
       await RecordedSession.updateMany(
         { bunnyVideoId: VideoGuid },
         { $set: { status: "failed" } }
+      );
+      await Course.updateMany(
+        { "courseVideos.bunnyVideoId": VideoGuid },
+        { $set: { "courseVideos.$[v].status": "failed" } },
+        { arrayFilters: [{ "v.bunnyVideoId": VideoGuid }] }
       );
       console.log(`[Bunny webhook] Marked failed: ${VideoGuid}`);
     }

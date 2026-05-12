@@ -27,6 +27,27 @@ const noteFileSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const courseVideoSchema = new mongoose.Schema(
+  {
+    title:         { type: String, required: true, trim: true },
+    description:   { type: String, default: "" },
+    bunnyVideoId:  { type: String, default: null },
+    bunnyLibraryId:{ type: String, default: null },
+    thumbnailUrl:  { type: String, default: null },
+    playbackUrl:   { type: String, default: null },
+    duration:      { type: Number, default: 0 },
+    size:          { type: Number, default: 0 },
+    order:         { type: Number, default: 0 },
+    status: {
+      type: String,
+      enum: ["uploading", "processing", "ready", "failed"],
+      default: "uploading"
+    },
+    uploadedAt: { type: Date, default: Date.now }
+  },
+  { _id: true }
+);
+
 const liveTestSchema = new mongoose.Schema(
   {
     enabled: { type: Boolean, default: false },
@@ -60,6 +81,7 @@ const courseSchema = new mongoose.Schema(
     pages: [pageSchema],
     notes: [noteSchema],
     noteFiles: [noteFileSchema],
+    courseVideos: { type: [courseVideoSchema], default: [] },
     liveTest: { type: liveTestSchema, default: () => ({}) },
     advancedSettings: {
       accessDuration: { type: Number, default: 365 },

@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "../../api/client";
 import useFetch from "../../hooks/useFetch";
@@ -39,6 +40,7 @@ const StatTile = ({ label, value, delta, deltaTone, icon, accent = "text-brand-p
 );
 
 const AdminCoursesPage = () => {
+  const navigate = useNavigate();
   const { data: courses, loading, refresh } = useFetch(() => api.get("/courses"), []);
   const { data: users } = useFetch(() => api.get("/users?role=instructor"), []);
   const [open, setOpen] = useState(false);
@@ -219,6 +221,12 @@ const AdminCoursesPage = () => {
 
                   <div className="mt-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
                     <button className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50" onClick={() => { setEditing(course); setOpen(true); }}>Edit</button>
+                    <button
+                      className="flex-1 rounded-md border border-brand-accent/30 px-2 py-1 text-[11px] font-medium text-brand-accent hover:bg-brand-surface transition-colors"
+                      onClick={() => navigate(`/admin/courses/${course._id}/videos`)}
+                    >
+                      Videos
+                    </button>
                     <button className="flex-1 rounded-md border border-slate-200 px-2 py-1 text-[11px] font-medium hover:bg-slate-50" onClick={() => duplicateCourse(course._id)}>Duplicate</button>
                     <button
                       className={`rounded-md border px-2 py-1 text-[11px] font-medium transition ${course.status === "archived" ? "border-emerald-200 text-emerald-600 hover:bg-emerald-50" : "border-amber-200 text-amber-600 hover:bg-amber-50"}`}
