@@ -6,9 +6,9 @@ import Loader from "../../components/Loader";
 import useFetch from "../../hooks/useFetch";
 
 const StatTile = ({ label, value, sub, dark }) => (
-  <div className={`rounded-2xl p-4 shadow-card ${dark ? "bg-brand-ink text-white" : "border border-slate-200/70 bg-white"}`}>
+  <div className={`w-40 shrink-0 rounded-2xl p-3 shadow-card sm:w-auto sm:p-4 ${dark ? "bg-brand-ink text-white" : "border border-slate-200/70 bg-white"}`}>
     <p className={`text-[10px] font-semibold uppercase tracking-wider ${dark ? "text-white/60" : "text-slate-500"}`}>{label}</p>
-    <p className={`mt-1 text-2xl font-bold ${dark ? "text-white" : "text-brand-ink"}`}>{value}</p>
+    <p className={`mt-1 text-xl font-bold sm:text-2xl ${dark ? "text-white" : "text-brand-ink"}`}>{value}</p>
     {sub ? <p className={`mt-0.5 text-[11px] ${dark ? "text-brand-cta" : "text-emerald-600"}`}>{sub}</p> : null}
   </div>
 );
@@ -21,7 +21,7 @@ const Podium = ({ rank, name, sub, score, accuracy, color, badge, totalAttempts 
   };
   const s = sizes[rank];
   return (
-    <div className={`relative rounded-2xl border border-slate-200/70 bg-white p-5 text-center shadow-card transition-transform ${s.scale}`}>
+    <div className={`relative w-56 shrink-0 rounded-2xl border border-slate-200/70 bg-white p-4 text-center shadow-card transition-transform sm:w-auto sm:p-5 ${s.scale}`}>
       <div className="mb-2">
         <span
           className={`inline-block rounded-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -32,7 +32,7 @@ const Podium = ({ rank, name, sub, score, accuracy, color, badge, totalAttempts 
         </span>
       </div>
       <div className="relative mx-auto flex items-center justify-center">
-        <div className={`${s.ring} flex items-center justify-center rounded-full ${s.base} text-white`}>
+        <div className={`${rank === 1 ? "h-24 w-24 sm:h-32 sm:w-32" : "h-20 w-20 sm:h-24 sm:w-24"} flex items-center justify-center rounded-full ${s.base} text-white`}>
           <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-10 w-10">
             <circle cx="12" cy="8" r="4" />
             <path d="M4 21v-1a8 8 0 0116 0v1" />
@@ -126,6 +126,17 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
       trend: l.avgScore >= 80 ? "up" : l.avgScore >= 60 ? "neutral" : "down",
     })), [leaderboard]);
 
+  const mobileRows = useMemo(() => leaderboard.map((l, i) => ({
+    rank: i + 1,
+    name: l.name,
+    email: l.email,
+    batch: l.batchName || "—",
+    tests: l.totalAttempts,
+    avgScore: `${l.avgScore}%`,
+    accuracy: `${l.accuracy}%`,
+    trend: l.avgScore >= 80 ? "up" : l.avgScore >= 60 ? "neutral" : "down",
+  })), [leaderboard]);
+
   // Filtered tests for per-test links (by exam pattern)
   const filteredTests = useMemo(() => {
     const arr = Array.isArray(tests) ? tests : [];
@@ -146,7 +157,7 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
           <h1 className="text-2xl font-bold text-brand-ink">Student Performance Leaderboard</h1>
           <p className="mt-1 text-sm text-slate-500">Real-time engagement metrics and academic rankings across all batches.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="grid w-full gap-2 sm:flex sm:w-auto sm:flex-wrap">
           <select
             value={batchFilter}
             onChange={(e) => setBatchFilter(e.target.value)}
@@ -188,7 +199,7 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="-mx-3 flex gap-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:grid sm:px-0 md:grid-cols-2 lg:grid-cols-4">
         <StatTile label="Total Participants" value={totalParticipants.toLocaleString()} sub="Learners with test attempts" />
         <StatTile label="Overall Avg Score" value={overallAvg ? `${overallAvg}%` : "—"} sub={leaderboard.length > 0 ? "Based on all attempts" : "No attempts yet"} />
         <StatTile label="Top Scorer" value={leaderboard[0]?.name?.split(" ")[0] || "—"} sub={leaderboard[0] ? `${leaderboard[0].avgScore}% avg · ${leaderboard[0].totalAttempts} tests` : "No data yet"} />
@@ -197,7 +208,7 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
 
       {/* Podium */}
       {podium.length > 0 ? (
-        <div className="grid items-end gap-4 md:grid-cols-3">
+        <div className="-mx-3 flex items-stretch gap-4 overflow-x-auto px-3 pb-3 sm:mx-0 sm:grid sm:items-end sm:px-0 md:grid-cols-3">
           {podium[1] ? <div className="md:order-1"><Podium {...podium[1]} /></div> : <div className="md:order-1" />}
           <div className="md:order-2"><Podium {...podium[0]} /></div>
           {podium[2] ? <div className="md:order-3"><Podium {...podium[2]} /></div> : <div className="md:order-3" />}
@@ -216,7 +227,7 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
             TOP {leaderboard.length} STUDENTS (by avg score)
           </span>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto sm:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-slate-50 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
@@ -266,6 +277,40 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
             </tbody>
           </table>
         </div>
+        <div className="divide-y divide-slate-100 sm:hidden">
+          {mobileRows.map((r) => (
+            <div key={`${r.email}-${r.rank}`} className="p-4">
+              <div className="flex items-center gap-3">
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${r.rank <= 3 ? "bg-brand-primary text-white" : "bg-brand-surface text-brand-primary"}`}>
+                  #{r.rank}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-brand-ink">{r.name}</p>
+                  <p className="truncate text-[11px] text-slate-500">{r.email}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-base font-black text-emerald-600">{r.avgScore}</p>
+                  <p className="text-[10px] text-slate-400">avg</p>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center text-[11px]">
+                <div className="rounded-xl bg-slate-50 px-2 py-2">
+                  <p className="font-bold text-brand-ink">{r.tests}</p>
+                  <p className="text-slate-400">Tests</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-2 py-2">
+                  <p className="font-bold text-brand-ink">{r.accuracy}</p>
+                  <p className="text-slate-400">Accuracy</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-2 py-2">
+                  <p className="truncate font-bold text-brand-ink">{r.batch}</p>
+                  <p className="text-slate-400">Batch</p>
+                </div>
+              </div>
+            </div>
+          ))}
+          {!mobileRows.length ? <p className="px-5 py-8 text-center text-sm text-slate-500">No rankings yet</p> : null}
+        </div>
         <div className="flex items-center justify-between border-t border-slate-100 px-5 py-3 text-xs text-slate-500">
           <span>Showing {tableRows.length} entries (ranks #4–#{3 + tableRows.length})</span>
         </div>
@@ -274,7 +319,7 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
       {/* Per-test leaderboard links */}
       {Array.isArray(tests) && tests.length ? (
         <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card">
-          <div className="flex items-center justify-between mb-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-brand-ink">Per-Test Leaderboards</h3>
             {patternFilter ? (
               <span className="rounded-md bg-brand-surface px-2 py-0.5 text-[10px] font-bold uppercase text-brand-primary">{patternFilter}</span>
@@ -284,8 +329,8 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
             <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
               {filteredTests.slice(0, 9).map((t) => (
                 <Link key={t._id} to={`${basePath}/tests/${t._id}/leaderboard`}
-                  className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-xs hover:bg-slate-50">
-                  <div>
+                  className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2 text-xs hover:bg-slate-50">
+                  <div className="min-w-0">
                     <span className="font-medium text-brand-ink">{t.title}</span>
                     {t.examPattern ? <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500">{t.examPattern}</span> : null}
                   </div>

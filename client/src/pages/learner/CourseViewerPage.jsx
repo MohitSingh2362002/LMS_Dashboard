@@ -212,7 +212,7 @@ const CourseViewerPage = () => {
           </div>
 
           {/* Tab content — scrollable */}
-          <div className="max-h-[46vh] flex-1 overflow-y-auto lg:max-h-none">
+          <div className="flex-1 overflow-visible lg:overflow-y-auto">
 
             {/* LESSONS */}
             {activeTab === 'lessons' && (
@@ -390,10 +390,10 @@ const CourseViewerPage = () => {
           {/* ── Lesson reader ── */}
           <div className="rounded-2xl border border-slate-200/80 bg-white shadow-card overflow-hidden">
             {/* Lesson header bar */}
-            <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/60 px-6 py-3">
-              <div className="flex items-center gap-2 text-xs text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-3 sm:px-6">
+              <div className="flex min-w-0 items-center gap-2 text-xs text-slate-500">
                 <IcBook />
-                <span className="font-medium text-brand-ink">{enrollment.course?.title}</span>
+                <span className="truncate font-medium text-brand-ink">{enrollment.course?.title}</span>
                 <span className="text-slate-300">›</span>
                 <span>Lesson {activeIndex + 1} of {pages.length}</span>
               </div>

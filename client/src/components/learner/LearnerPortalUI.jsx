@@ -132,17 +132,17 @@ export const CourseThumbnail = ({
 
 export const LearnerPageTitle = ({ title, subtitle }) => (
   <div>
-    <h2 className="text-4xl font-bold tracking-tight text-brand-primary">{title}</h2>
-    {subtitle ? <p className="mt-2 text-base text-slate-600">{subtitle}</p> : null}
+    <h2 className="text-2xl font-bold tracking-tight text-brand-primary sm:text-4xl">{title}</h2>
+    {subtitle ? <p className="mt-2 text-sm text-slate-600 sm:text-base">{subtitle}</p> : null}
   </div>
 );
 
 export const LearnerStatCard = ({ label, value, helper, tone = "blue" }) => {
   const toneClass = tone === "green" ? "text-emerald-700" : tone === "red" ? "text-red-700" : "text-brand-primary";
   return (
-    <div className="rounded-lg border border-slate-300 bg-white p-7 shadow-card">
-      <p className="text-sm text-brand-ink">{label}</p>
-      <p className={`mt-2 text-3xl font-bold ${toneClass}`}>{value}</p>
+    <div className="w-36 shrink-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-card sm:w-auto sm:rounded-lg sm:border-slate-300 sm:p-7">
+      <p className="text-xs text-brand-ink sm:text-sm">{label}</p>
+      <p className={`mt-1 text-2xl font-bold sm:mt-2 sm:text-3xl ${toneClass}`}>{value}</p>
       {helper ? <p className="mt-1 text-xs text-slate-500">{helper}</p> : null}
     </div>
   );

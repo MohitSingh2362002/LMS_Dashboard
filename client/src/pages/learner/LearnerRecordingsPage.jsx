@@ -57,11 +57,11 @@ function RecordingCard({ rec, onPlay }) {
   const canPlay = rec.status === 'ready' && !!url;
 
   return (
-    <div className="group flex gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-card hover:shadow-cardHover transition-shadow">
+    <div className="group flex gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-card transition-shadow hover:shadow-cardHover sm:gap-4 sm:p-4">
       {/* Thumbnail */}
       <div
         onClick={() => canPlay && onPlay(rec)}
-        className={`relative h-24 w-40 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 ${canPlay ? 'cursor-pointer' : ''}`}
+        className={`relative h-20 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-slate-100 sm:h-24 sm:w-40 ${canPlay ? 'cursor-pointer' : ''}`}
       >
         {rec.thumbnailUrl
           ? <img src={rec.thumbnailUrl} alt={rec.title} className="h-full w-full object-cover" />
@@ -70,7 +70,7 @@ function RecordingCard({ rec, onPlay }) {
         {/* Play overlay */}
         {canPlay && (
           <div className="absolute inset-0 flex items-center justify-center bg-brand-ink/50 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg text-brand-accent">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-brand-accent shadow-lg sm:h-10 sm:w-10">
               <IcPlay />
             </div>
           </div>
@@ -84,14 +84,14 @@ function RecordingCard({ rec, onPlay }) {
       </div>
 
       {/* Info */}
-      <div className="flex flex-1 flex-col justify-between min-w-0">
+      <div className="flex min-w-0 flex-1 flex-col justify-between">
         <div>
-          <h4 className="font-semibold text-brand-ink leading-snug line-clamp-2 text-sm">{rec.title}</h4>
+          <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-brand-ink">{rec.title}</h4>
           {rec.liveClass?.title && (
             <p className="mt-0.5 text-[11px] text-slate-400 truncate">Live class: {rec.liveClass.title}</p>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-slate-500">
+        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-slate-500 sm:text-[11px]">
           <span className="flex items-center gap-1"><IcClock />{fmt(rec.duration)}</span>
           {rec.batches?.length > 0 && <span className="flex items-center gap-1"><IcUsers />{rec.batches.map(b=>b.name).join(', ')}</span>}
           <span className="text-slate-400">{fmtDate(rec.recordedAt)}</span>
@@ -117,19 +117,19 @@ function CourseSection({ courseName, thumbnail, batches, items, onPlay }) {
   const batchLabel = batches?.map(b => b.name).join(' · ') || null;
 
   return (
-    <div className="rounded-2xl border border-slate-200/70 bg-white shadow-card overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card">
       {/* Course header — acts as toggle */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex w-full items-center gap-4 px-5 py-4 text-left hover:bg-brand-surface/30 transition-colors"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-surface/30 sm:gap-4 sm:px-5 sm:py-4"
       >
         {/* thumbnail or icon */}
         {thumbnail
-          ? <img src={thumbnail} alt={courseName} className="h-12 w-12 flex-shrink-0 rounded-xl object-cover border border-slate-200 shadow-card" />
-          : <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-brand-surface text-brand-accent"><IcBook /></div>
+          ? <img src={thumbnail} alt={courseName} className="h-10 w-10 flex-shrink-0 rounded-xl border border-slate-200 object-cover shadow-card sm:h-12 sm:w-12" />
+          : <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-brand-surface text-brand-accent sm:h-12 sm:w-12"><IcBook /></div>
         }
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-brand-ink">{courseName}</p>
+          <p className="line-clamp-2 font-bold leading-snug text-brand-ink">{courseName}</p>
           {batchLabel && (
             <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400"><IcUsers />{batchLabel}</p>
           )}
@@ -147,7 +147,7 @@ function CourseSection({ courseName, thumbnail, batches, items, onPlay }) {
       {open && (
         <div className="border-t border-slate-100 divide-y divide-slate-50">
           {items.map(rec => (
-            <div key={rec._id} className="px-5 py-3">
+            <div key={rec._id} className="px-3 py-2.5 sm:px-5 sm:py-3">
               <RecordingCard rec={rec} onPlay={onPlay} />
             </div>
           ))}
@@ -191,13 +191,13 @@ export default function LearnerRecordingsPage() {
   const totalReady = recordings.length;
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-5 animate-fadeIn sm:space-y-6">
       {/* ── Hero header ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent px-6 py-8 text-white shadow-panel">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-primary to-brand-accent px-4 py-5 text-white shadow-panel sm:px-6 sm:py-8">
         <div className="absolute -right-8 -top-8 h-40 w-40 rounded-full bg-white/5" />
         <div className="absolute -right-2 top-10 h-24 w-24 rounded-full bg-white/5" />
-        <div className="relative z-10 flex items-center gap-5">
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
+        <div className="relative z-10 flex items-center gap-3 sm:gap-5">
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm sm:h-14 sm:w-14">
             <IcVideo />
           </div>
           <div>

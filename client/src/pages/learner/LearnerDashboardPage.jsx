@@ -92,17 +92,17 @@ const StatCard = ({ icon, label, value, sub, accent = "blue" }) => {
 const QuickTile = ({ icon, label, sub, to, gradient }) => (
   <Link
     to={to}
-    className={`group relative flex flex-col items-center gap-3 overflow-hidden rounded-2xl p-5 text-center text-white transition hover:-translate-y-0.5 hover:shadow-lg ${gradient}`}
+    className={`group relative flex min-h-[6.75rem] w-36 shrink-0 flex-col items-center gap-2 overflow-hidden rounded-2xl p-3 text-center text-white transition hover:-translate-y-0.5 hover:shadow-lg sm:w-auto sm:gap-3 sm:p-5 ${gradient}`}
   >
     {/* Decorative circles */}
     <div className="pointer-events-none absolute -right-4 -bottom-4 h-20 w-20 rounded-full bg-white/10" />
     <div className="pointer-events-none absolute -right-1 -bottom-8 h-14 w-14 rounded-full bg-white/10" />
-    <div className="relative flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+    <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm sm:h-11 sm:w-11">
       {icon}
     </div>
     <div className="relative">
       <p className="text-sm font-bold">{label}</p>
-      {sub && <p className="mt-0.5 text-[11px] text-white/75">{sub}</p>}
+      {sub && <p className="mt-0.5 line-clamp-2 text-[10px] text-white/75 sm:text-[11px]">{sub}</p>}
     </div>
   </Link>
 );
@@ -308,7 +308,7 @@ const LearnerDashboardPage = () => {
             <p className="text-xs text-slate-500">Quick access to your academic tools</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="-mx-3 flex gap-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 md:grid-cols-4">
           <QuickTile icon={<IcUsers />} label="My Batches" sub="View your batches" to="/learner/batches" gradient="bg-gradient-to-br from-[#3B82F6] to-[#1D4ED8]" />
           <QuickTile icon={<IcTest />} label="Mock Tests" sub="Test series & exams" to="/learner/exam" gradient="bg-gradient-to-br from-[#F59E0B] to-[#B45309]" />
           <QuickTile icon={<IcHistory />} label="Test History" sub="Past results" to={attempts[0] ? `/learner/exam/results/${attempts[0]._id}` : "/learner/exam"} gradient="bg-gradient-to-br from-[#10B981] to-[#047857]" />
@@ -332,20 +332,23 @@ const LearnerDashboardPage = () => {
         </div>
 
         {recommended.length ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="-mx-3 flex gap-4 overflow-x-auto px-3 pb-2 sm:mx-0 sm:grid sm:px-0 md:grid-cols-2 xl:grid-cols-3">
             {recommended.map((course) => (
-              <BrowseCourseCard
-                key={course._id}
-                course={course}
-                isEnrolled={false}
-                onEnrollClick={setEnrollTarget}
-              />
+              <div key={course._id} className="w-[78vw] max-w-[19rem] shrink-0 sm:w-auto sm:max-w-none sm:shrink">
+                <BrowseCourseCard
+                  course={course}
+                  isEnrolled={false}
+                  onEnrollClick={setEnrollTarget}
+                />
+              </div>
             ))}
           </div>
         ) : enrollments.length ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="-mx-3 flex gap-4 overflow-x-auto px-3 pb-2 sm:mx-0 sm:grid sm:px-0 md:grid-cols-2 xl:grid-cols-3">
             {enrollments.slice(0, 3).map((e) => (
-              <EnrolledCard key={e._id} enrollment={e} />
+              <div key={e._id} className="w-[78vw] max-w-[19rem] shrink-0 sm:w-auto sm:max-w-none sm:shrink">
+                <EnrolledCard enrollment={e} />
+              </div>
             ))}
           </div>
         ) : (
@@ -438,7 +441,7 @@ const EnrolledCard = ({ enrollment }) => {
   const pct = Math.min(100, enrollment.progress || 0);
   return (
     <article className="overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card hover:shadow-cardHover transition-shadow">
-      <div className="relative h-44">
+      <div className="relative h-32 sm:h-44">
         <CourseThumbnail
           title={course?.title}
           thumbnail={course?.thumbnail}
@@ -446,7 +449,7 @@ const EnrolledCard = ({ enrollment }) => {
           zoom
         />
       </div>
-      <div className="p-5">
+      <div className="p-4 sm:p-5">
         <h3 className="line-clamp-2 text-sm font-extrabold text-brand-ink leading-snug">{course?.title || "Course"}</h3>
         <div className="mt-3">
           <div className="mb-1 flex justify-between text-[11px] text-slate-500">
