@@ -15,20 +15,20 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 // ── icons ──────────────────────────────────────────────────────────────────
 const IcDownload = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 flex-shrink-0">
-    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-    <polyline points="7 10 12 15 17 10"/>
-    <line x1="12" y1="15" x2="12" y2="3"/>
+    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
 const IcRefresh = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5 flex-shrink-0">
-    <polyline points="23 4 23 10 17 10"/>
-    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+    <polyline points="23 4 23 10 17 10" />
+    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
   </svg>
 );
 const IcClose = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
-    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
 
