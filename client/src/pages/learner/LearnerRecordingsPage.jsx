@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getRecordings } from '../../api/recordings';
 import toast from 'react-hot-toast';
+import ProtectedVideoPlayer from '../../components/ProtectedVideoPlayer';
 
 /* ── helpers ── */
 const fmt = (s) => { if (!s) return '0m'; const h = Math.floor(s/3600), m = Math.floor((s%3600)/60); return h > 0 ? `${h}h ${m}m` : `${m}m`; };
@@ -19,24 +20,32 @@ const IcUsers  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor
 const IcVideo  = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5"><path d="M15 10l4.553-2.277A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z" /></svg>;
 const IcChev   = ({ open }) => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9" /></svg>;
 
-/* ── Video player modal ── */
+/* ── Protected video player modal ── */
 function PlayerModal({ rec, onClose }) {
   const url = buildUrl(rec);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-ink/70 backdrop-blur-sm p-4 animate-fadeIn" onClick={onClose}>
       <div className="w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+        {/* Header */}
         <div className="flex items-start justify-between rounded-t-2xl bg-brand-ink px-5 py-4">
           <div className="min-w-0">
             <p className="font-semibold text-white leading-snug truncate">{rec.title}</p>
-            <p className="mt-0.5 text-xs text-slate-400">{rec.course?.title} · {fmt(rec.duration)} · {fmtDate(rec.recordedAt)}</p>
+            <p className="mt-0.5 text-xs text-slate-400">
+              {rec.course?.title} · {fmt(rec.duration)} · {fmtDate(rec.recordedAt)}
+            </p>
           </div>
-          <button onClick={onClose} className="ml-4 flex-shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors"><IcClose /></button>
+          <button onClick={onClose} className="ml-4 flex-shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white transition-colors">
+            <IcClose />
+          </button>
         </div>
-        <div className="aspect-video rounded-b-2xl overflow-hidden shadow-2xl bg-slate-900">
-          {url
-            ? <iframe src={url} className="h-full w-full" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture" allowFullScreen title={rec.title} />
-            : <div className="flex h-full items-center justify-center text-slate-500 text-sm">Video not available yet</div>}
-        </div>
+        {/* Protected player — watermark + logging + blocking */}
+        <ProtectedVideoPlayer
+          embedUrl={url}
+          title={rec.title}
+          courseId={rec.course?._id}
+          videoId={rec._id}
+          onClose={onClose}
+        />
       </div>
     </div>
   );

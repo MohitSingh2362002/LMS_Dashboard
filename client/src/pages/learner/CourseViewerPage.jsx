@@ -5,6 +5,7 @@ import api from "../../api/client";
 import useFetch from "../../hooks/useFetch";
 import Loader from "../../components/Loader";
 import ProtectedContentFrame from "../../components/ProtectedContentFrame";
+import ProtectedVideoPlayer from "../../components/ProtectedVideoPlayer";
 import { formatDate, formatFileSize, getFullFileUrl, getLiveTestStatus } from "../../utils/helpers";
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -34,7 +35,7 @@ const IcExtLink = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 const IcBack    = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><polyline points="15 18 9 12 15 6"/></svg>;
 
 // ── Video player modal ────────────────────────────────────────────────────────
-function VideoPlayerModal({ video, onClose }) {
+function VideoPlayerModal({ video, enrollmentId, courseId, onClose }) {
   const url = buildEmbed(video);
   return (
     <div
@@ -42,6 +43,7 @@ function VideoPlayerModal({ video, onClose }) {
       onClick={onClose}
     >
       <div className="w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+        {/* Modal header */}
         <div className="flex items-center justify-between rounded-t-2xl bg-brand-ink px-5 py-3.5">
           <div className="min-w-0">
             <p className="font-semibold text-white leading-snug truncate">{video.title}</p>
@@ -56,21 +58,15 @@ function VideoPlayerModal({ video, onClose }) {
             <IcClose />
           </button>
         </div>
-        <div className="aspect-video rounded-b-2xl overflow-hidden bg-slate-950 shadow-2xl">
-          {url ? (
-            <iframe
-              src={url}
-              className="h-full w-full"
-              allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture"
-              allowFullScreen
-              title={video.title}
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-slate-500 text-sm">
-              Video not available
-            </div>
-          )}
-        </div>
+        {/* Protected player */}
+        <ProtectedVideoPlayer
+          embedUrl={url}
+          title={video.title}
+          courseId={courseId}
+          enrollmentId={enrollmentId}
+          videoId={video._id}
+          onClose={onClose}
+        />
       </div>
     </div>
   );
@@ -677,7 +673,12 @@ const CourseViewerPage = () => {
 
       {/* ── Video Player Modal ── */}
       {playingVideo && (
-        <VideoPlayerModal video={playingVideo} onClose={() => setPlayingVideo(null)} />
+        <VideoPlayerModal
+          video={playingVideo}
+          enrollmentId={enrollment._id}
+          courseId={enrollment.course?._id}
+          onClose={() => setPlayingVideo(null)}
+        />
       )}
     </ProtectedContentFrame>
   );
