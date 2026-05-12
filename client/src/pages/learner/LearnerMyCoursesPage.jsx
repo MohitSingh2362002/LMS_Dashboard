@@ -26,9 +26,9 @@ const CourseCard = ({ enrollment }) => {
   const color  = progressColor(pct);
   const status = statusLabel(pct);
   return (
-    <article className="group flex overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover hover:-translate-y-0.5 sm:block">
+    <article className="group overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-card transition hover:shadow-cardHover hover:-translate-y-0.5">
       {/* Thumbnail */}
-      <div className="relative h-40 w-28 shrink-0 sm:h-52 sm:w-auto">
+      <div className="relative h-52">
         <CourseThumbnail
           title={course?.title}
           thumbnail={course?.thumbnail}
@@ -49,7 +49,7 @@ const CourseCard = ({ enrollment }) => {
       </div>
 
       {/* Body */}
-      <div className="min-w-0 flex-1 p-3 sm:p-5">
+      <div className="p-5">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
           {course?.instructorDisplayName || course?.instructor?.name || "Faculty"}
         </p>
@@ -59,7 +59,7 @@ const CourseCard = ({ enrollment }) => {
 
         {/* Tags */}
         {course?.tags?.length > 0 && (
-          <div className="mt-2 hidden flex-wrap gap-1 sm:flex">
+          <div className="mt-2 flex flex-wrap gap-1">
             {course.tags.slice(0, 2).map((tag) => (
               <span key={tag} className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
                 {tag}
@@ -69,7 +69,7 @@ const CourseCard = ({ enrollment }) => {
         )}
 
         {/* Progress bar */}
-        <div className="mt-3 sm:mt-4">
+        <div className="mt-4">
           <div className="mb-1.5 flex items-center justify-between text-[11px]">
             <span className="text-slate-500">Progress</span>
             <span className={`font-bold ${color.text}`}>{pct}%</span>
@@ -80,7 +80,7 @@ const CourseCard = ({ enrollment }) => {
               style={{ width: `${pct}%`, backgroundColor: color.bar }}
             />
           </div>
-          <p className="mt-1 hidden text-[10px] text-slate-400 sm:block">
+          <p className="mt-1 text-[10px] text-slate-400">
             {enrollment.completedPages?.length || 0} of {course?.pages?.length || 0} pages completed
           </p>
         </div>
@@ -88,7 +88,7 @@ const CourseCard = ({ enrollment }) => {
         {/* CTA */}
         <Link
           to={`/learner/courses/${enrollment._id}`}
-          className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-brand-primary px-3 py-2 text-xs font-bold text-white transition hover:bg-brand-ink sm:mt-4 sm:py-2.5"
+          className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-brand-primary py-2.5 text-xs font-bold text-white hover:bg-brand-ink transition"
         >
           {pct === 0 ? "Start Learning" : pct >= 100 ? "Review Course" : "Continue Learning"}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">

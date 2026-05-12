@@ -165,6 +165,13 @@ body {
   [class*="overflow-x-auto"] {
     -webkit-overflow-scrolling: touch;
     max-width: calc(100vw - 1.5rem);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .overflow-x-auto::-webkit-scrollbar,
+  [class*="overflow-x-auto"]::-webkit-scrollbar {
+    display: none;
   }
 
   .shadow-panel,

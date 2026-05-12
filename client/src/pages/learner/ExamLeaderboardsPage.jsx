@@ -15,16 +15,16 @@ const StatTile = ({ label, value, sub, dark }) => (
 
 const Podium = ({ rank, name, sub, score, accuracy, color, badge, totalAttempts }) => {
   const sizes = {
-    1: { ring: "h-32 w-32", scale: "scale-110", base: "bg-gradient-to-br from-brand-accent to-brand-primary" },
-    2: { ring: "h-24 w-24", scale: "scale-95", base: "bg-gradient-to-br from-slate-200 to-slate-300" },
-    3: { ring: "h-24 w-24", scale: "scale-95", base: "bg-gradient-to-br from-amber-200 to-amber-400" }
+    1: { ring: "h-32 w-32", scale: "sm:scale-110", base: "bg-gradient-to-br from-brand-accent to-brand-primary" },
+    2: { ring: "h-24 w-24", scale: "sm:scale-95", base: "bg-gradient-to-br from-slate-200 to-slate-300" },
+    3: { ring: "h-24 w-24", scale: "sm:scale-95", base: "bg-gradient-to-br from-amber-200 to-amber-400" }
   };
   const s = sizes[rank];
   return (
-    <div className={`relative w-56 shrink-0 rounded-2xl border border-slate-200/70 bg-white p-4 text-center shadow-card transition-transform sm:w-auto sm:p-5 ${s.scale}`}>
+    <div className={`relative rounded-2xl border border-slate-200/70 bg-white p-2.5 text-center shadow-card transition-transform sm:p-5 ${s.scale}`}>
       <div className="mb-2">
         <span
-          className={`inline-block rounded-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+          className={`inline-block rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider sm:px-2.5 sm:text-[10px] ${
             rank === 1 ? "bg-brand-primary text-white" : rank === 2 ? "bg-slate-300 text-slate-800" : "bg-amber-300 text-amber-900"
           }`}
         >
@@ -32,27 +32,27 @@ const Podium = ({ rank, name, sub, score, accuracy, color, badge, totalAttempts 
         </span>
       </div>
       <div className="relative mx-auto flex items-center justify-center">
-        <div className={`${rank === 1 ? "h-24 w-24 sm:h-32 sm:w-32" : "h-20 w-20 sm:h-24 sm:w-24"} flex items-center justify-center rounded-full ${s.base} text-white`}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-10 w-10">
+        <div className={`${rank === 1 ? "h-14 w-14 sm:h-32 sm:w-32" : "h-12 w-12 sm:h-24 sm:w-24"} flex items-center justify-center rounded-full ${s.base} text-white`}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" className="h-6 w-6 sm:h-10 sm:w-10">
             <circle cx="12" cy="8" r="4" />
             <path d="M4 21v-1a8 8 0 0116 0v1" />
           </svg>
         </div>
         {rank === 1 ? (
-          <span className="absolute -bottom-1 right-2 flex h-7 w-7 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg">
+          <span className="absolute -bottom-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-primary text-white shadow-lg sm:right-2 sm:h-7 sm:w-7">
             <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="h-4 w-4"><path d="M22 11.08V12a10 10 0 11-5.93-9.14M22 4l-10 10-3-3" /></svg>
           </span>
         ) : null}
       </div>
-      <p className="mt-3 text-base font-bold text-brand-ink">{name}</p>
-      <p className="mt-0.5 text-[11px] text-slate-500">{sub}</p>
+      <p className="mt-2 truncate text-xs font-bold text-brand-ink sm:mt-3 sm:text-base">{name}</p>
+      <p className="mt-0.5 truncate text-[9px] text-slate-500 sm:text-[11px]">{sub}</p>
       {rank === 1 ? (
-        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
+        <div className="mt-2 grid grid-cols-1 gap-1 border-t border-slate-100 pt-2 text-[10px] sm:mt-3 sm:grid-cols-2 sm:gap-2 sm:pt-3 sm:text-xs">
           <div><p className="text-[9px] font-semibold uppercase text-slate-400">Tests Taken</p><p className="font-bold text-brand-ink">{totalAttempts ?? "—"}</p></div>
           <div><p className="text-[9px] font-semibold uppercase text-slate-400">Global Rank</p><p className="font-bold text-brand-ink">#1</p></div>
         </div>
       ) : (
-        <div className="mt-3 grid grid-cols-2 gap-2 border-t border-slate-100 pt-3 text-xs">
+        <div className="mt-2 grid grid-cols-1 gap-1 border-t border-slate-100 pt-2 text-[10px] sm:mt-3 sm:grid-cols-2 sm:gap-2 sm:pt-3 sm:text-xs">
           <div><p className="text-[9px] font-semibold uppercase text-slate-400">Score</p><p className="font-bold text-brand-ink">{score}</p></div>
           <div><p className="text-[9px] font-semibold uppercase text-slate-400">Accuracy</p><p className="font-bold text-brand-ink">{accuracy}</p></div>
         </div>
@@ -208,7 +208,7 @@ const ExamLeaderboardsPage = ({ basePath = "/learner/exam" }) => {
 
       {/* Podium */}
       {podium.length > 0 ? (
-        <div className="-mx-3 flex items-stretch gap-4 overflow-x-auto px-3 pb-3 sm:mx-0 sm:grid sm:items-end sm:px-0 md:grid-cols-3">
+        <div className="grid grid-cols-3 items-stretch gap-2 sm:items-end sm:gap-4 md:grid-cols-3">
           {podium[1] ? <div className="md:order-1"><Podium {...podium[1]} /></div> : <div className="md:order-1" />}
           <div className="md:order-2"><Podium {...podium[0]} /></div>
           {podium[2] ? <div className="md:order-3"><Podium {...podium[2]} /></div> : <div className="md:order-3" />}

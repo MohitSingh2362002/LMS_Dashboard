@@ -77,12 +77,12 @@ const StatCard = ({ icon, label, value, sub, accent = "blue" }) => {
     purple: "bg-purple-50 text-purple-600",
   }[accent];
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-slate-200/70 bg-white p-5 shadow-card">
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${bg}`}>{icon}</div>
+    <div className="flex w-40 shrink-0 items-center gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-card sm:w-auto sm:gap-4 sm:p-5">
+      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl sm:h-12 sm:w-12 ${bg}`}>{icon}</div>
       <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-        <p className="mt-0.5 text-2xl font-extrabold text-brand-ink">{value}</p>
-        {sub && <p className="text-[11px] text-slate-400">{sub}</p>}
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">{label}</p>
+        <p className="mt-0.5 text-xl font-extrabold text-brand-ink sm:text-2xl">{value}</p>
+        {sub && <p className="hidden text-[11px] text-slate-400 sm:block">{sub}</p>}
       </div>
     </div>
   );
@@ -293,7 +293,7 @@ const LearnerDashboardPage = () => {
       )}
 
       {/* ── Stats Row ── */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="-mx-3 flex gap-3 overflow-x-auto px-3 pb-1 sm:mx-0 sm:grid sm:px-0 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard icon={<IcBook />} label="Enrolled" value={String(stats.enrolled).padStart(2, "0")} sub="Active courses" accent="blue" />
         <StatCard icon={<IcCheck />} label="Completed" value={String(stats.completed).padStart(2, "0")} sub="Finished courses" accent="green" />
         <StatCard icon={<IcTrend />} label="Avg Progress" value={`${stats.progress}%`} sub="Overall completion" accent="amber" />

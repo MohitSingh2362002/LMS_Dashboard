@@ -278,16 +278,16 @@ const ExamCrackerPage = () => {
       </div>
 
       {/* ── Search + Filters ── */}
-      <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-card">
-        <div className="flex flex-wrap gap-3">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-3 shadow-card sm:p-4">
+        <div className="grid gap-3 sm:flex sm:flex-wrap">
           {/* Search */}
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative min-w-0 sm:min-w-[200px] sm:flex-1">
             <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
               <IcSearch />
             </div>
             <input
               type="text"
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm placeholder:text-slate-400 focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 transition"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-9 pr-4 text-sm placeholder:text-slate-400 transition focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/20 sm:py-2.5"
               placeholder="Search tests by name, pattern or course…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -296,9 +296,9 @@ const ExamCrackerPage = () => {
 
           {/* Type filter */}
           <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
-            <IcFilter />
+            <span className="text-slate-400"><IcFilter /></span>
             <select
-              className="bg-transparent text-sm font-semibold text-slate-600 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-600 focus:outline-none"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
@@ -310,7 +310,7 @@ const ExamCrackerPage = () => {
           {/* Mode filter */}
           <div className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
             <select
-              className="bg-transparent text-sm font-semibold text-slate-600 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-600 focus:outline-none"
               value={modeFilter}
               onChange={(e) => setModeFilter(e.target.value)}
             >
@@ -324,7 +324,7 @@ const ExamCrackerPage = () => {
           {hasFilters && (
             <button
               onClick={clearAll}
-              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:border-brand-primary hover:text-brand-primary transition"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:border-brand-primary hover:text-brand-primary"
             >
               Clear Filters
             </button>
@@ -332,7 +332,7 @@ const ExamCrackerPage = () => {
         </div>
 
         {/* Results count */}
-        <p className="mt-3 text-[11px] text-slate-500">
+        <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-[11px] text-slate-500">
           Showing <span className="font-bold text-brand-primary">{filtered.length}</span> of {tests.length} tests
           {hasFilters && " (filtered)"}
         </p>
@@ -340,13 +340,13 @@ const ExamCrackerPage = () => {
 
       {/* ── My Tests strip ── */}
       {attempts.length > 0 && (
-        <div className="rounded-2xl border border-brand-primary/20 bg-brand-surface p-4">
-          <div className="flex items-center justify-between">
+        <div className="rounded-2xl border border-brand-primary/20 bg-brand-surface p-3 sm:p-4">
+          <div className="grid gap-3 sm:flex sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-extrabold text-brand-primary">My Attempted Tests</p>
               <p className="text-xs text-slate-500">{attempts.length} test{attempts.length !== 1 ? "s" : ""} completed</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1 sm:overflow-visible sm:pb-0">
               {attempts.slice(0, 3).map((a) => (
                 <Link
                   key={a._id}
