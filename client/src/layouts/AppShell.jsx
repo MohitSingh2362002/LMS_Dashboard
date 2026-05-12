@@ -23,9 +23,9 @@ const SearchOverlay = ({ onClose, navItems }) => {
   const go = (to) => { navigate(to); onClose(); };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 pt-24 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 px-3 pt-20 backdrop-blur-sm sm:pt-24" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-lg rounded-2xl border border-slate-200/70 bg-white shadow-panel">
+        className="max-h-[calc(100vh-6rem)] w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200/70 bg-white shadow-panel">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
           <svg className="h-4 w-4 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>
           <input ref={inputRef} value={query} onChange={(e) => setQuery(e.target.value)}
@@ -57,7 +57,7 @@ const SearchOverlay = ({ onClose, navItems }) => {
 const NotificationsPanel = ({ notifications, onClose, onClearAll }) => (
   <div className="fixed inset-0 z-50" onClick={onClose}>
     <div onClick={(e) => e.stopPropagation()}
-      className="absolute right-4 top-14 w-80 rounded-2xl border border-slate-200/70 bg-white shadow-panel">
+      className="absolute left-3 right-3 top-14 rounded-2xl border border-slate-200/70 bg-white shadow-panel sm:left-auto sm:w-80">
       <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
         <h3 className="text-sm font-bold text-brand-ink">Notifications</h3>
         {notifications.length > 0 && (
@@ -118,7 +118,7 @@ const QuickActionMenu = ({ role, onClose }) => {
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()}
-        className="absolute right-4 top-14 w-52 rounded-xl border border-slate-200/70 bg-white shadow-panel overflow-hidden">
+        className="absolute left-3 right-3 top-14 rounded-xl border border-slate-200/70 bg-white shadow-panel overflow-hidden sm:left-auto sm:w-52">
         <div className="border-b border-slate-100 px-4 py-2.5">
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Quick Actions</p>
         </div>
@@ -259,12 +259,13 @@ const AppShell = () => {
       </aside>
 
       {/* Main — offset by sidebar width on desktop, scrolls independently */}
-      <div className="flex flex-1 flex-col overflow-y-auto lg:ml-64">
-        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white px-4 py-3 lg:px-8">
-          <div className="flex items-center gap-4">
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto lg:ml-64">
+        <header className="sticky top-0 z-30 border-b border-slate-200 bg-white px-3 py-3 sm:px-4 lg:px-8">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             <button
-              className="rounded-lg border border-slate-200 px-3 py-2 text-sm transition hover:bg-slate-50 lg:hidden"
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-slate-200 text-sm transition hover:bg-slate-50 lg:hidden"
               onClick={() => setOpen((value) => !value)}
+              aria-label="Open navigation"
             >
               ☰
             </button>
@@ -273,7 +274,7 @@ const AppShell = () => {
             <button
               type="button"
               onClick={() => setShowSearch(true)}
-              className="relative flex flex-1 max-w-xl items-center gap-3 rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm text-slate-400 hover:border-brand-accent hover:bg-white transition"
+              className="relative order-3 flex min-w-0 flex-[1_0_100%] items-center gap-3 rounded-full border border-slate-200 bg-slate-50 py-2 pl-10 pr-4 text-sm text-slate-400 transition hover:border-brand-accent hover:bg-white sm:order-none sm:max-w-xl sm:flex-1"
             >
               <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
@@ -283,7 +284,7 @@ const AppShell = () => {
               <kbd className="ml-auto hidden rounded border border-slate-200 px-1.5 py-0.5 text-[10px] sm:block">⌘K</kbd>
             </button>
 
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
               {/* Bell — navigates to notifications page */}
               <button
                 type="button"
@@ -301,8 +302,8 @@ const AppShell = () => {
               <>
                 <button
                   type="button"
-                  onClick={() => { setShowQuickAction((v) => !v); setShowNotifications(false); }}
-                  className="rounded-lg bg-brand-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+                  onClick={() => setShowQuickAction((v) => !v)}
+                  className="whitespace-nowrap rounded-lg bg-brand-ink px-3 py-2 text-xs font-semibold text-white transition hover:bg-black sm:px-4 sm:text-sm"
                 >
                   Quick Action
                 </button>
@@ -325,7 +326,7 @@ const AppShell = () => {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-6 lg:px-8">
+        <main className="min-w-0 flex-1 px-3 py-4 sm:px-4 sm:py-6 lg:px-8">
           <Outlet />
         </main>
       </div>
