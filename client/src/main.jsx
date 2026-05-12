@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
+import PWAPrompt from "./components/PWAPrompt";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -12,6 +13,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <AuthProvider>
         <App />
         <Toaster position="top-right" />
+        <PWAPrompt />
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>

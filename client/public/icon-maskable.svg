@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="112.64" fill="#1A4FA0"/>
+  <!-- Shield -->
+  <path d="M256.0 87.04 L399.36 163.84 L399.36 271.36 Q399.36 384.0 256.0 430.08 Q112.64 384.0 112.64 271.36 L112.64 163.84 Z"
+        fill="none" stroke="#2E7FD9" stroke-width="17.92" stroke-linejoin="round"/>
+  <!-- Book pages -->
+  <rect x="194.56" y="194.56" width="61.44" height="133.12" rx="7.68" fill="white" opacity="0.9"/>
+  <rect x="256.0" y="194.56" width="61.44" height="133.12" rx="7.68" fill="white" opacity="0.9"/>
+  <line x1="256.0" y1="194.56" x2="256.0" y2="327.68" stroke="#2E7FD9" stroke-width="9.216"/>
+  <!-- Grad cap -->
+  <polygon points="256.0,143.36 332.8,176.64 256.0,209.92 179.2,176.64"
+           fill="white" opacity="0.95"/>
+</svg>
