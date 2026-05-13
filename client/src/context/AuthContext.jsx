@@ -3,23 +3,51 @@ import api from "../api/client";
 
 const AuthContext = createContext(null);
 
+const USER_CACHE_KEY = "lms_user";
+
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Restore user from cache immediately — no flicker on PWA reopen
+  const [user, setUser] = useState(() => {
+    try {
+      const cached = localStorage.getItem(USER_CACHE_KEY);
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  // If we already have a cached user, skip the loading spinner
+  const [loading, setLoading] = useState(!localStorage.getItem(USER_CACHE_KEY));
+
+  const persistUser = (u) => {
+    if (u) {
+      localStorage.setItem(USER_CACHE_KEY, JSON.stringify(u));
+    } else {
+      localStorage.removeItem(USER_CACHE_KEY);
+    }
+    setUser(u);
+  };
 
   useEffect(() => {
     const bootstrap = async () => {
       const token = localStorage.getItem("lms_token");
       if (!token) {
+        persistUser(null);
         setLoading(false);
         return;
       }
 
       try {
         const { data } = await api.get("/auth/me");
-        setUser(data.user);
+        persistUser(data.user);
       } catch (error) {
-        localStorage.removeItem("lms_token");
+        const status = error?.response?.status;
+        if (status === 401) {
+          // Token is invalid / expired — clear everything
+          localStorage.removeItem("lms_token");
+          persistUser(null);
+        }
+        // Any other error (network offline, 5xx, timeout) — keep the cached
+        // user so the PWA stays logged in and works offline.
       } finally {
         setLoading(false);
       }
@@ -31,20 +59,20 @@ export const AuthProvider = ({ children }) => {
   const login = async (payload) => {
     const { data } = await api.post("/auth/login", payload);
     localStorage.setItem("lms_token", data.token);
-    setUser(data.user);
+    persistUser(data.user);
     return data.user;
   };
 
   const register = async (payload) => {
     const { data } = await api.post("/auth/register", payload);
     localStorage.setItem("lms_token", data.token);
-    setUser(data.user);
+    persistUser(data.user);
     return data.user;
   };
 
   const logout = () => {
     localStorage.removeItem("lms_token");
-    setUser(null);
+    persistUser(null);
   };
 
   const value = useMemo(
@@ -54,7 +82,7 @@ export const AuthProvider = ({ children }) => {
       login,
       register,
       logout,
-      setUser
+      setUser: persistUser,
     }),
     [user, loading]
   );
