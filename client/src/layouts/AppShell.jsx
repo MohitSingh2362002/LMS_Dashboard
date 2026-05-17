@@ -249,7 +249,7 @@ const AppShell = () => {
           {user.role === "admin" && (
             <>
               <a
-                href="https://expo.dev/artifacts/eas/pVsguv3RxZZEyk7BBKRNv8.apk"
+                href="https://expo.dev/artifacts/eas/wu2jj5ct94HptzYeSDKtBX.apk"
                 download="EduMaster.apk"
                 className="flex w-full items-center gap-3 rounded-lg bg-green-500/20 px-3 py-2.5 text-sm font-semibold text-green-300 transition-colors hover:bg-green-500/30 hover:text-green-200"
               >
