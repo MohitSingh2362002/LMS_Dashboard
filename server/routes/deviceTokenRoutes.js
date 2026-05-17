@@ -1,30 +1,38 @@
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
-import DeviceToken from "../models/DeviceToken.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
-/** POST /api/device-tokens  { token, platform }  — register FCM token for current user */
+/** POST /api/device-tokens  { token, platform }  — upsert FCM token inside user document */
 router.post("/", protect, async (req, res) => {
   try {
     const { token, platform = "android" } = req.body;
     if (!token) return res.status(400).json({ message: "token is required" });
-    await DeviceToken.findOneAndUpdate(
-      { token },
-      { userId: req.user._id, token, platform, isActive: true, lastSeen: new Date() },
-      { upsert: true, new: true }
-    );
+
+    // Pull old entry for this token (if any), then push fresh one
+    await User.findByIdAndUpdate(req.user._id, { $pull: { deviceTokens: { token } } });
+    await User.findByIdAndUpdate(req.user._id, {
+      $push: { deviceTokens: { token, platform, isActive: true, lastSeen: new Date() } },
+    });
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
 });
 
-/** DELETE /api/device-tokens  { token }  — deregister on logout */
+/** DELETE /api/device-tokens  { token }  — deactivate token on logout */
 router.delete("/", protect, async (req, res) => {
   try {
     const { token } = req.body;
-    if (token) await DeviceToken.findOneAndUpdate({ token }, { isActive: false });
+    if (token) {
+      await User.findByIdAndUpdate(
+        req.user._id,
+        { $set: { "deviceTokens.$[el].isActive": false } },
+        { arrayFilters: [{ "el.token": token }] }
+      );
+    }
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ message: e.message });

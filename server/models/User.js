@@ -15,7 +15,15 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: "" },
     isActive: { type: Boolean, default: true },
     studentId: { type: String, default: "" },
-    sessionVersion: { type: Number, default: 0 }  // incremented on every login — invalidates all old tokens
+    sessionVersion: { type: Number, default: 0 },  // incremented on every login — invalidates all old tokens
+    deviceTokens: [
+      {
+        token:    { type: String, required: true },
+        platform: { type: String, enum: ["android", "ios", "web"], default: "android" },
+        isActive: { type: Boolean, default: true },
+        lastSeen: { type: Date,   default: Date.now },
+      }
+    ]
   },
   { timestamps: true }
 );
