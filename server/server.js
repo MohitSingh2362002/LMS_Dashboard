@@ -31,6 +31,7 @@ import announcementRoutes from "./routes/announcementRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import purchaseRoutes from "./routes/purchaseRoutes.js";
 import recordingRoutes from "./routes/recordingRoutes.js";
+import appConfigRoutes from "./routes/appConfigRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -50,6 +51,7 @@ const allowedOrigins = [
   "https://localhost:3000",
   "http://localhost:3002",
   "https://localhost:3002",
+  "http://localhost:8001"
 ].filter(Boolean).map(url => url.replace(/\/+$/, ""));
 
 const corsOptions = {
@@ -105,6 +107,7 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/purchases", purchaseRoutes);
 app.use("/api/recordings", recordingRoutes);
+app.use("/api/app-config", appConfigRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-user", ({ userId }) => {

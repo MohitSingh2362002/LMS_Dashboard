@@ -244,7 +244,23 @@ const AppShell = () => {
           ))}
         </nav>
 
-        <div className="border-t border-white/5 px-3 py-3">
+        <div className="border-t border-white/5 px-3 py-3 space-y-1">
+          {/* Install App buttons — admin only */}
+          {user.role === "admin" && (
+            <>
+              <a
+                href="https://expo.dev/artifacts/eas/pVsguv3RxZZEyk7BBKRNv8.apk"
+                download="EduMaster.apk"
+                className="flex w-full items-center gap-3 rounded-lg bg-green-500/20 px-3 py-2.5 text-sm font-semibold text-green-300 transition-colors hover:bg-green-500/30 hover:text-green-200"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5 shrink-0">
+                  <path d="M12 16l-4-4h3V4h2v8h3l-4 4z" />
+                  <path d="M20 18H4v2h16v-2z" />
+                </svg>
+                <span>Install App (.apk)</span>
+              </a>
+            </>
+          )}
           <button
             onClick={logout}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-muted transition-colors hover:bg-sidebar-hover hover:text-white"

@@ -19,6 +19,7 @@ import AdminRecordingsPage from "./pages/admin/AdminRecordingsPage";
 import AdminCourseVideosPage from "./pages/admin/AdminCourseVideosPage";
 import SupportPage from "./pages/shared/SupportPage";
 import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
+import AdminAppConfigPage from "./pages/admin/AdminAppConfigPage";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
 import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
@@ -109,6 +110,7 @@ function App() {
         <Route path="reviews" element={<AdminReviewsPage />} />
         <Route path="announcements" element={<AdminAnnouncementsPage />} />
         <Route path="support" element={<AdminSupportPage />} />
+        <Route path="app-config" element={<AdminAppConfigPage />} />
       </Route>
 
       <Route
