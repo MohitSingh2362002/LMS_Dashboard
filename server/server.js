@@ -33,8 +33,10 @@ import purchaseRoutes from "./routes/purchaseRoutes.js";
 import recordingRoutes from "./routes/recordingRoutes.js";
 import appConfigRoutes from "./routes/appConfigRoutes.js";
 import promoCodeRoutes from "./routes/promoCodeRoutes.js";
+import deviceTokenRoutes from "./routes/deviceTokenRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
+import IORedis from "ioredis";
 
 await connectDB();
 
@@ -110,6 +112,35 @@ app.use("/api/purchases", purchaseRoutes);
 app.use("/api/recordings", recordingRoutes);
 app.use("/api/app-config", appConfigRoutes);
 app.use("/api/promo-codes", promoCodeRoutes);
+app.use("/api/device-tokens", deviceTokenRoutes);
+
+// ── Notification service in-app bridge (Redis pub/sub → Socket.io) ─────────
+// The notification microservice publishes to "notif:inapp" when a delivery job runs.
+// We subscribe here and emit to the user's socket room so they get it in real-time.
+if (process.env.REDIS_HOST) {
+  const notifSub = new IORedis({
+    host:     process.env.REDIS_HOST || "127.0.0.1",
+    port:     parseInt(process.env.REDIS_PORT || "6379"),
+    password: process.env.REDIS_PASSWORD || undefined,
+    tls:      process.env.REDIS_TLS === "true" ? {} : undefined,
+  });
+  notifSub.subscribe("notif:inapp", (err) => {
+    if (err) console.error("[notif bridge] Redis subscribe error:", err.message);
+    else     console.log("🔔 Subscribed to notif:inapp Redis channel");
+  });
+  notifSub.on("message", (_channel, raw) => {
+    try {
+      const { userId, notificationId, title, body, imageUrl, data } = JSON.parse(raw);
+      // Emit to the user's socket room (joined in "join-user" handler below)
+      io.to(`user:${userId}`).emit("notification:push", {
+        notificationId, title, body, imageUrl, data,
+        at: new Date().toISOString(),
+      });
+    } catch (e) {
+      console.error("[notif bridge] parse error:", e.message);
+    }
+  });
+}
 
 io.on("connection", (socket) => {
   socket.on("join-user", ({ userId }) => {

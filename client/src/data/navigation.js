@@ -18,6 +18,7 @@ export const navigationByRole = {
     { label: "Reviews",          to: "/admin/reviews",            icon: "reviews"    },
     { label: "Announcements",    to: "/admin/announcements",      icon: "bell"       },
     { label: "Support",          to: "/admin/support",            icon: "doubts"     },
+    { label: "Push Notifs",      to: "/admin/push-notifications", icon: "bell"       },
     { label: "Promo Codes",      to: "/admin/promo-codes",        icon: "tests"      },
     { label: "Mobile App",       to: "/admin/app-config",         icon: "dashboard"  },
   ],
