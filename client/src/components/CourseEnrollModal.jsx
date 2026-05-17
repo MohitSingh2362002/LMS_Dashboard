@@ -1,24 +1,51 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
+import api from "../api/client";
 
 /**
  * CourseEnrollModal — purchase confirmation dialog for a paid course.
  *
  * Props:
- *   course      – course object { _id, title, pricing, thumbnail, instructor }
- *   role        – "learner" | "parent"
+ *   course         – course object { _id, title, pricing, thumbnail, instructor }
+ *   role           – "learner" | "parent"
  *   linkedLearners – (parent only) array of { _id, name } linked learners
- *   onClose     – dismiss
- *   onEnrolled  – called after successful enrollment (receives course._id)
- *   enrollFn    – async (courseId, learnerId?) → enrollment. Provided by parent page.
+ *   onClose        – dismiss
+ *   onEnrolled     – called after successful enrollment (receives course._id)
+ *   enrollFn       – async (courseId, learnerId?) → enrollment. Provided by parent page.
  */
 const CourseEnrollModal = ({ course, role, linkedLearners = [], onClose, onEnrolled, enrollFn }) => {
-  const [enrolling, setEnrolling] = useState(false);
+  const [enrolling, setEnrolling]       = useState(false);
   const [selectedLearner, setSelectedLearner] = useState(linkedLearners[0]?._id || "");
 
-  const isFree = course.pricing?.type === "free" || !(course.pricing?.amount > 0);
-  const price  = isFree ? "Free" : `₹${course.pricing?.amount}`;
-  const isParent = role === "parent";
+  // Promo code
+  const [promoCode,    setPromoCode]    = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoResult,  setPromoResult]  = useState(null);  // { valid, discount, finalAmount, message }
+  const [promoError,   setPromoError]   = useState("");
+
+  const isFree   = course.pricing?.type === "free" || !(course.pricing?.amount > 0);
+  const basePrice = course.pricing?.amount ?? 0;
+  const finalPrice = promoResult?.valid ? promoResult.finalAmount : basePrice;
+  const isParent  = role === "parent";
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoLoading(true);
+    setPromoError("");
+    setPromoResult(null);
+    try {
+      const { data } = await api.post("/promo-codes/validate", {
+        code:   promoCode.trim(),
+        type:   "course",
+        amount: basePrice,
+      });
+      setPromoResult(data);
+    } catch (err) {
+      setPromoError(err?.response?.data?.message ?? "Invalid promo code");
+    } finally {
+      setPromoLoading(false);
+    }
+  };
 
   const handleEnroll = async () => {
     if (isParent && !selectedLearner) {
@@ -28,6 +55,10 @@ const CourseEnrollModal = ({ course, role, linkedLearners = [], onClose, onEnrol
     setEnrolling(true);
     try {
       await enrollFn(course._id, selectedLearner || undefined);
+      // Increment promo usage after successful enrollment
+      if (promoResult?.valid && promoCode.trim()) {
+        api.post("/promo-codes/apply", { code: promoCode.trim() }).catch(() => {});
+      }
       toast.success(isFree ? "Enrolled successfully!" : "Purchase successful! Course is now accessible.");
       onEnrolled(course._id);
       onClose();
@@ -69,13 +100,65 @@ const CourseEnrollModal = ({ course, role, linkedLearners = [], onClose, onEnrol
           <p className="mt-0.5 text-center text-xs text-slate-500">by {course.instructorDisplayName || course.instructor?.name}</p>
         )}
 
-        {/* Price */}
+        {/* Price block */}
         <div className={`mt-4 rounded-2xl border p-4 text-center ${isFree ? "bg-emerald-50 border-emerald-100" : "bg-violet-50 border-violet-100"}`}>
-          <p className={`text-2xl font-extrabold ${isFree ? "text-emerald-700" : "text-violet-700"}`}>{price}</p>
+          {!isFree && promoResult?.valid ? (
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-lg font-bold text-slate-400 line-through">₹{basePrice}</p>
+              <p className="text-2xl font-extrabold text-emerald-600">₹{finalPrice}</p>
+            </div>
+          ) : (
+            <p className={`text-2xl font-extrabold ${isFree ? "text-emerald-700" : "text-violet-700"}`}>
+              {isFree ? "Free" : `₹${basePrice}`}
+            </p>
+          )}
           <p className="text-[11px] text-slate-500 mt-0.5">
             {isFree ? "Free access · Start immediately" : "One-time payment · Lifetime access"}
           </p>
+          {promoResult?.valid && (
+            <p className="mt-1 text-[11px] font-semibold text-emerald-600">
+              🎉 {promoResult.message}
+            </p>
+          )}
         </div>
+
+        {/* Promo code input — paid courses only */}
+        {!isFree && (
+          <div className="mt-3">
+            <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 transition-colors ${
+              promoResult?.valid ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-slate-50"
+            }`}>
+              <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => {
+                  setPromoCode(e.target.value.toUpperCase());
+                  setPromoResult(null);
+                  setPromoError("");
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleApplyPromo()}
+                placeholder="Promo code"
+                className="flex-1 bg-transparent text-sm font-bold tracking-wider text-brand-ink placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleApplyPromo}
+                disabled={promoLoading || !promoCode.trim()}
+                className="shrink-0 rounded-lg bg-brand-primary px-3 py-1.5 text-xs font-bold text-white transition hover:opacity-90 disabled:opacity-40"
+              >
+                {promoLoading ? (
+                  <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : "Apply"}
+              </button>
+            </div>
+            {promoError && (
+              <p className="mt-1.5 text-xs font-semibold text-red-500">{promoError}</p>
+            )}
+          </div>
+        )}
 
         {/* Parent: learner selector */}
         {isParent && linkedLearners.length > 0 && (
@@ -126,7 +209,11 @@ const CourseEnrollModal = ({ course, role, linkedLearners = [], onClose, onEnrol
               isFree ? "bg-brand-primary hover:bg-brand-ink" : "bg-violet-600 hover:bg-violet-700"
             }`}
           >
-            {enrolling ? "Processing…" : isFree ? "Enroll Free" : `Pay ${price}`}
+            {enrolling
+              ? "Processing…"
+              : isFree
+                ? "Enroll Free"
+                : `Pay ₹${finalPrice}`}
           </button>
         </div>
       </div>

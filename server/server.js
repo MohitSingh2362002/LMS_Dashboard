@@ -32,6 +32,7 @@ import supportRoutes from "./routes/supportRoutes.js";
 import purchaseRoutes from "./routes/purchaseRoutes.js";
 import recordingRoutes from "./routes/recordingRoutes.js";
 import appConfigRoutes from "./routes/appConfigRoutes.js";
+import promoCodeRoutes from "./routes/promoCodeRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 
@@ -108,6 +109,7 @@ app.use("/api/support", supportRoutes);
 app.use("/api/purchases", purchaseRoutes);
 app.use("/api/recordings", recordingRoutes);
 app.use("/api/app-config", appConfigRoutes);
+app.use("/api/promo-codes", promoCodeRoutes);
 
 io.on("connection", (socket) => {
   socket.on("join-user", ({ userId }) => {
