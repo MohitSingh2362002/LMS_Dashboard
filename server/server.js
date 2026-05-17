@@ -69,7 +69,12 @@ const corsOptions = {
   credentials: true
 };
 
-const io = new Server(server, { cors: corsOptions });
+const io = new Server(server, {
+  cors: corsOptions,
+  allowEIO3: true,           // backwards compat with older clients
+  pingTimeout: 60000,
+  pingInterval: 25000,
+});
 
 const uploadDir = path.join(__dirname, "uploads");
 
