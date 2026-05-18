@@ -236,41 +236,59 @@ export const markAdmitted = asyncHandler(async (req, res) => {
   await lead.populate("assignedTo", "name email avatar");
 
   // ── Auto-create a Learner account ─────────────────────────────────────────
+  // Wrapped in try/catch — if user creation fails for any reason,
+  // we still return the admitted lead (never block the admission).
   let learnerAccount = null;
-  if (lead.email) {
-    const existing = await User.findOne({ email: lead.email.toLowerCase() });
-    if (!existing) {
-      // Generate temp password: first 4 chars of name + last 4 digits of phone (or random)
-      const namePart  = (lead.name || "user").replace(/\s+/g, "").slice(0, 4).toLowerCase();
-      const phonePart = (lead.phone || "").replace(/\D/g, "").slice(-4) || Math.random().toString(36).slice(-4);
-      const tempPassword = `${namePart}${phonePart}`;
 
-      const learnerCount = await User.countDocuments({ role: "learner" });
-      const studentId    = `STU${String(learnerCount + 1).padStart(5, "0")}`;
+  if (!lead.email) {
+    // No email on the lead — cannot create account
+    learnerAccount = { noEmail: true };
+  } else {
+    try {
+      const existing = await User.findOne({ email: lead.email.toLowerCase() });
 
-      const newUser = await User.create({
-        name:      lead.name || "Student",
-        email:     lead.email.toLowerCase(),
-        password:  tempPassword,
-        role:      "learner",
-        studentId,
-      });
+      if (existing) {
+        learnerAccount = {
+          alreadyExisted: true,
+          _id:       existing._id,
+          name:      existing.name,
+          email:     existing.email,
+          studentId: existing.studentId,
+        };
+      } else {
+        // Generate temp password: first 4 chars of name + last 4 digits of phone
+        const namePart  = (lead.name || "user").replace(/\s+/g, "").slice(0, 4).toLowerCase();
+        const phonePart = (lead.phone || "").replace(/\D/g, "").slice(-4) || Math.random().toString(36).slice(-4);
+        const tempPassword = `${namePart}@${phonePart}`;
 
-      learnerAccount = {
-        _id:       newUser._id,
-        name:      newUser.name,
-        email:     newUser.email,
-        studentId,
-        tempPassword, // shown once to admin so they can share with student
-      };
+        const learnerCount = await User.countDocuments({ role: "learner" });
+        const studentId    = `STU${String(learnerCount + 1).padStart(5, "0")}`;
 
-      pushActivity(lead, "note_added",
-        `Learner account created — ID: ${studentId}, Email: ${newUser.email}, Temp Password: ${tempPassword}`,
-        req.user._id, req.user.name
-      );
-      await lead.save();
-    } else {
-      learnerAccount = { _id: existing._id, name: existing.name, email: existing.email, studentId: existing.studentId, alreadyExisted: true };
+        const newUser = await User.create({
+          name:      lead.name || "Student",
+          email:     lead.email.toLowerCase(),
+          password:  tempPassword,
+          role:      "learner",
+          studentId,
+        });
+
+        learnerAccount = {
+          _id:         newUser._id,
+          name:        newUser.name,
+          email:       newUser.email,
+          studentId,
+          tempPassword,
+        };
+
+        pushActivity(lead, "note_added",
+          `Learner account created — ID: ${studentId} | Login: ${newUser.email} | Password: ${tempPassword}`,
+          req.user._id, req.user.name
+        );
+        await lead.save();
+      }
+    } catch (err) {
+      console.error("[markAdmitted] learner creation failed:", err.message);
+      learnerAccount = { error: err.message };
     }
   }
 

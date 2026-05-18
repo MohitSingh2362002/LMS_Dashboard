@@ -135,7 +135,12 @@ export default function AllLeadsPage({ isCounsellor = false }) {
     if (!isCounsellor) {
       setStatsLoading(true);
       api.get("/leads/stats")
-        .then(({ data }) => setStats(data))
+        .then(({ data }) => setStats({
+          total:         data.total,
+          newToday:      data.todayNew,
+          followUpToday: data.overdueFollowUps,
+          admitted:      data.byStatus?.admitted || 0,
+        }))
         .finally(() => setStatsLoading(false));
     }
   }, [isCounsellor]);

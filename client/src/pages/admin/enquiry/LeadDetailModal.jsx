@@ -209,13 +209,15 @@ export default function LeadDetailModal({ leadId, onClose, onUpdated, isAdmin = 
   };
 
   const admit = async () => {
-    if (!window.confirm("Mark this lead as Admitted? A Learner account will be created automatically if email exists.")) return;
+    if (!window.confirm("Mark this lead as Admitted? A Learner account will be created automatically if the lead has an email.")) return;
     setSaving(true);
     try {
       const { data } = await api.patch(`/leads/${leadId}/admit`);
       setLead(data);
-      if (data.learnerAccount) setLearnerInfo(data.learnerAccount);
+      setLearnerInfo(data.learnerAccount || null);
       onUpdated?.();
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to mark admitted");
     } finally { setSaving(false); }
   };
 
@@ -755,8 +757,21 @@ export default function LeadDetailModal({ leadId, onClose, onUpdated, isAdmin = 
                 </div>
               )}
               {learnerInfo?.alreadyExisted && (
-                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-700">
-                  ℹ️ A learner account already exists for <b>{learnerInfo.email}</b>
+                <div className="rounded-xl bg-amber-50 border border-amber-100 p-3 text-xs text-amber-700 flex items-center gap-2">
+                  <span>⚠️</span>
+                  <span>A learner account already exists for <b>{learnerInfo.email}</b>. Student can log in with their existing credentials.</span>
+                </div>
+              )}
+              {learnerInfo?.noEmail && (
+                <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600 flex items-center gap-2">
+                  <span>ℹ️</span>
+                  <span>No email on this lead — learner account was not created. Add an email in the Details tab to enable auto-registration.</span>
+                </div>
+              )}
+              {learnerInfo?.error && (
+                <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-xs text-red-600 flex items-center gap-2">
+                  <span>❌</span>
+                  <span>Could not create learner account: {learnerInfo.error}</span>
                 </div>
               )}
 
