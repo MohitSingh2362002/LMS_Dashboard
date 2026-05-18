@@ -1,7 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-// Always show the live production endpoint in the embed snippet —
 // external websites must call the deployed server, not localhost.
 const PRODUCTION_ENDPOINT = import.meta.env.FORM_LEAD || "https://lms-dashboard-31k0.onrender.com/api/leads/public"
 
