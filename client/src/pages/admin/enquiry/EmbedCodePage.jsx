@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 
 // Always show the live production endpoint in the embed snippet —
 // external websites must call the deployed server, not localhost.
-const PRODUCTION_ENDPOINT = "http://localhost:7001/api/leads/public";
+const PRODUCTION_ENDPOINT = import.meta.env.FORM_LEAD || "http://localhost:7001/api/leads/public";
 
 // What's shown in the dark info box (reflects current env)
 const API_BASE = import.meta.env.VITE_API_URL || "https://lms-dashboard-31k0.onrender.com/api";
