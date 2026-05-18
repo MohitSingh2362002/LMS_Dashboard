@@ -21,6 +21,10 @@ const ROLES = [
     id: "parent", label: "Parent",
     icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
   },
+  {
+    id: "counsellor", label: "Counsellor",
+    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5"><path d="M21 15a4 4 0 01-4 4H8l-5 4V7a4 4 0 014-4h10a4 4 0 014 4v8z"/></svg>,
+  },
 ];
 
 const IcEye = ({ open }) => open ? (
@@ -68,7 +72,7 @@ const LoginPage = () => {
 
   // ── Shared role selector (used in both layouts) ──────────────────────────────
   const RoleSelectorDesktop = () => (
-    <div className="mt-6 grid grid-cols-2 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-4">
+    <div className="mt-6 grid grid-cols-3 gap-2 rounded-2xl bg-slate-100 p-2 sm:grid-cols-5">
       {ROLES.map((role) => (
         <button
           type="button" key={role.id}
@@ -84,7 +88,7 @@ const LoginPage = () => {
   );
 
   const RoleSelectorMobile = () => (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
       {ROLES.map((role) => {
         const active = form.role === role.id;
         return (

@@ -1,12 +1,76 @@
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import { useAuth } from "../context/AuthContext";
 import { navigationByRole } from "../data/navigation";
 import { classNames, SOCKET_URL } from "../utils/helpers";
 import NavIcon from "../components/NavIcon";
-import { useLocation } from "react-router-dom";
+
+// ── Exact match helper for nav children (handles ?query params) ─────
+const isNavChildActive = (childTo, location) => {
+  const [childPath, childQuery] = childTo.split("?");
+  // Pathname must match exactly
+  if (location.pathname !== childPath) return false;
+  // If child has no query params → active only when there's no status param either
+  if (!childQuery) {
+    const locParams = new URLSearchParams(location.search);
+    return !locParams.get("status") && !locParams.get("followUpToday");
+  }
+  // If child has query params → all of them must match
+  const childParams = new URLSearchParams(childQuery);
+  const locParams   = new URLSearchParams(location.search);
+  for (const [key, val] of childParams) {
+    if (locParams.get(key) !== val) return false;
+  }
+  return true;
+};
+
+// ── Collapsible nav group (for sub-sidebar sections like Enquiry) ───
+const NavGroup = ({ item, onClose }) => {
+  const location = useLocation();
+  const anyChildActive = item.children.some((c) => isNavChildActive(c.to, location));
+  const [open, setOpen] = useState(anyChildActive);
+
+  useEffect(() => { if (anyChildActive) setOpen(true); }, [anyChildActive]);
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={classNames(
+          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+          anyChildActive ? "bg-white/10 text-white" : "text-sidebar-muted hover:bg-sidebar-hover hover:text-white"
+        )}
+      >
+        <NavIcon name={item.icon} />
+        <span className="flex-1 text-left">{item.label}</span>
+        <svg className={classNames("h-3.5 w-3.5 transition-transform", open ? "rotate-90" : "")} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6" /></svg>
+      </button>
+      {open && (
+        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-white/10 pl-3">
+          {item.children.map((child) => {
+            const active = isNavChildActive(child.to, location);
+            return (
+              <NavLink
+                key={child.to}
+                to={child.to}
+                onClick={onClose}
+                className={() => classNames(
+                  "flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors",
+                  active ? "bg-brand-accent text-white" : "text-sidebar-muted hover:bg-sidebar-hover hover:text-white"
+                )}
+              >
+                <NavIcon name={child.icon} className="h-3.5 w-3.5" />
+                <span>{child.label}</span>
+              </NavLink>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── Global search overlay ───────────────────────────────────────────
 const SearchOverlay = ({ onClose, navItems }) => {
@@ -146,7 +210,9 @@ const AppShell = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [showQuickAction, setShowQuickAction] = useState(false);
   const [notifications, setNotifications] = useState([]);
-  const navItems = navigationByRole[user.role] || [];
+  const rawNavItems = navigationByRole[user.role] || [];
+  // Flatten group children for search overlay
+  const navItems = rawNavItems.flatMap((item) => item.group ? item.children : [item]);
 
   useEffect(() => {
     if (!user?._id) return undefined;
@@ -184,7 +250,9 @@ const AppShell = () => {
       ? { brand: "EduAdmin", subtitle: "LMS Portal" }
       : user.role === "learner"
         ? { brand: "EduMaster LMS", subtitle: "Learner Portal" }
-        : { brand: "LMS Studio", subtitle: `${user.role} portal` };
+        : user.role === "counsellor"
+          ? { brand: "EduMaster CRM", subtitle: "Counsellor Portal" }
+          : { brand: "LMS Studio", subtitle: `${user.role} portal` };
 
   const unreadCount = notifications.length;
 
@@ -223,25 +291,28 @@ const AppShell = () => {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to.split("/").length === 2}
-              onClick={() => setOpen(false)}
-              className={({ isActive }) =>
-                classNames(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-brand-accent text-white"
-                    : "text-sidebar-muted hover:bg-sidebar-hover hover:text-white"
-                )
-              }
-            >
-              <NavIcon name={item.icon} />
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+          {rawNavItems.map((item) =>
+            item.group ? (
+              <NavGroup key={item.label} item={item} onClose={() => setOpen(false)} />
+            ) : (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={() => setOpen(false)}
+                className={() =>
+                  classNames(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    isNavChildActive(item.to, location)
+                      ? "bg-brand-accent text-white"
+                      : "text-sidebar-muted hover:bg-sidebar-hover hover:text-white"
+                  )
+                }
+              >
+                <NavIcon name={item.icon} />
+                <span>{item.label}</span>
+              </NavLink>
+            )
+          )}
         </nav>
 
         <div className="border-t border-white/5 px-3 py-3 space-y-1">

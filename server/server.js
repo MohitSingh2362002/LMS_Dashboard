@@ -34,6 +34,7 @@ import recordingRoutes from "./routes/recordingRoutes.js";
 import appConfigRoutes from "./routes/appConfigRoutes.js";
 import promoCodeRoutes from "./routes/promoCodeRoutes.js";
 import deviceTokenRoutes from "./routes/deviceTokenRoutes.js";
+import leadRoutes from "./routes/leadRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { activateDueLiveClasses } from "./utils/liveClassScheduler.js";
 import IORedis from "ioredis";
@@ -54,7 +55,8 @@ const allowedOrigins = [
   "https://localhost:3000",
   "http://localhost:3002",
   "https://localhost:3002",
-  "http://localhost:8001"
+  "http://localhost:8001",
+  "http://localhost:8080"
 ].filter(Boolean).map(url => url.replace(/\/+$/, ""));
 
 const corsOptions = {
@@ -82,7 +84,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-app.use(cors(corsOptions));
+// Public lead endpoint is open to ANY website (like a tracking pixel)
+// Everything else uses the restricted allowed-origins list
+app.use((req, res, next) => {
+  const isPublicLead = req.path === "/api/leads/public";
+  cors(isPublicLead ? { origin: "*", methods: ["POST", "OPTIONS"], allowedHeaders: ["Content-Type"] } : corsOptions)(req, res, next);
+});
 app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use("/uploads", express.static(uploadDir));
@@ -118,20 +125,21 @@ app.use("/api/recordings", recordingRoutes);
 app.use("/api/app-config", appConfigRoutes);
 app.use("/api/promo-codes", promoCodeRoutes);
 app.use("/api/device-tokens", deviceTokenRoutes);
+app.use("/api/leads", leadRoutes);
 
 // ── Notification service in-app bridge (Redis pub/sub → Socket.io) ─────────
 // The notification microservice publishes to "notif:inapp" when a delivery job runs.
 // We subscribe here and emit to the user's socket room so they get it in real-time.
 if (process.env.REDIS_HOST) {
   const notifSub = new IORedis({
-    host:     process.env.REDIS_HOST || "127.0.0.1",
-    port:     parseInt(process.env.REDIS_PORT || "6379"),
+    host: process.env.REDIS_HOST || "127.0.0.1",
+    port: parseInt(process.env.REDIS_PORT || "6379"),
     password: process.env.REDIS_PASSWORD || undefined,
-    tls:      process.env.REDIS_TLS === "true" ? {} : undefined,
+    tls: process.env.REDIS_TLS === "true" ? {} : undefined,
   });
   notifSub.subscribe("notif:inapp", (err) => {
     if (err) console.error("[notif bridge] Redis subscribe error:", err.message);
-    else     console.log("🔔 Subscribed to notif:inapp Redis channel");
+    else console.log("🔔 Subscribed to notif:inapp Redis channel");
   });
   notifSub.on("message", (_channel, raw) => {
     try {

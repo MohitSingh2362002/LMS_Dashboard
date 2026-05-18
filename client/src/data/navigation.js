@@ -1,6 +1,27 @@
 export const navigationByRole = {
+  counsellor: [
+    { label: "Dashboard",    to: "/counsellor",              icon: "dashboard"  },
+    { label: "My Leads",     to: "/counsellor/leads",        icon: "leads"      },
+    { label: "Follow-ups",   to: "/counsellor/leads?followUpToday=true", icon: "attendance" },
+    { label: "Admitted",     to: "/counsellor/leads?status=admitted",   icon: "reviews"    },
+  ],
   admin: [
     { label: "Dashboard",        to: "/admin",                    icon: "dashboard"  },
+    {
+      label: "Enquiry", icon: "leads", group: true,
+      children: [
+        { label: "Overview",      to: "/admin/enquiry",                        icon: "dashboard"  },
+        { label: "All Leads",     to: "/admin/enquiry/leads",                  icon: "leads"      },
+        { label: "New",           to: "/admin/enquiry/leads?status=new",       icon: "bell"       },
+        { label: "Contacted",     to: "/admin/enquiry/leads?status=contacted", icon: "chat"       },
+        { label: "Assigned",      to: "/admin/enquiry/leads?status=assigned",  icon: "instructor" },
+        { label: "In Progress",   to: "/admin/enquiry/leads?status=in-progress", icon: "migration"},
+        { label: "Admitted",      to: "/admin/enquiry/leads?status=admitted",  icon: "reviews"    },
+        { label: "Lost",          to: "/admin/enquiry/leads?status=lost",      icon: "doubts"     },
+        { label: "Counsellors",   to: "/admin/enquiry/counsellors",            icon: "users"      },
+        { label: "Embed Form",    to: "/admin/enquiry/embed",                  icon: "resources"  },
+      ],
+    },
     { label: "Courses",          to: "/admin/courses",            icon: "courses"    },
     { label: "Batch",            to: "/admin/batches",            icon: "batch"      },
     { label: "Migration Request",to: "/admin/migrations",         icon: "migration"  },

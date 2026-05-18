@@ -22,6 +22,11 @@ import AdminInstructorPage from "./pages/admin/AdminInstructorPage";
 import AdminAppConfigPage from "./pages/admin/AdminAppConfigPage";
 import AdminPromoCodesPage from "./pages/admin/AdminPromoCodesPage";
 import AdminPushNotificationsPage from "./pages/admin/AdminPushNotificationsPage";
+import EnquiryOverviewPage from "./pages/admin/enquiry/EnquiryOverviewPage";
+import AllLeadsPage from "./pages/admin/enquiry/AllLeadsPage";
+import CounsellorsPage from "./pages/admin/enquiry/CounsellorsPage";
+import EmbedCodePage from "./pages/admin/enquiry/EmbedCodePage";
+import CounsellorDashboard from "./pages/counsellor/CounsellorDashboard";
 import QuestionBankPage from "./pages/shared/QuestionBankPage";
 import MockTestsPage from "./pages/shared/MockTestsPage";
 import DoubtVaultManagePage from "./pages/shared/DoubtVaultManagePage";
@@ -115,6 +120,24 @@ function App() {
         <Route path="app-config" element={<AdminAppConfigPage />} />
         <Route path="promo-codes" element={<AdminPromoCodesPage />} />
         <Route path="push-notifications" element={<AdminPushNotificationsPage />} />
+        {/* Enquiry / Lead Management */}
+        <Route path="enquiry" element={<EnquiryOverviewPage />} />
+        <Route path="enquiry/leads" element={<AllLeadsPage />} />
+        <Route path="enquiry/counsellors" element={<CounsellorsPage />} />
+        <Route path="enquiry/embed" element={<EmbedCodePage />} />
+      </Route>
+
+      {/* ── Counsellor portal ─────────────────────────────────────────── */}
+      <Route
+        path="/counsellor"
+        element={
+          <ProtectedRoute roles={["counsellor"]}>
+            <AppShell />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<CounsellorDashboard />} />
+        <Route path="leads" element={<AllLeadsPage isCounsellor={true} />} />
       </Route>
 
       <Route

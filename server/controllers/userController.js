@@ -31,9 +31,9 @@ export const getUsers = asyncHandler(async (req, res) => {
 export const createUser = asyncHandler(async (req, res) => {
   const { name, email, password, role, linkedLearners = [] } = req.body;
 
-  if (!["instructor", "learner", "parent"].includes(role)) {
+  if (!["instructor", "learner", "parent", "counsellor"].includes(role)) {
     res.status(400);
-    throw new Error("Admin can only create instructor, learner, or parent accounts here");
+    throw new Error("Invalid role");
   }
 
   const existing = await User.findOne({ email: email?.toLowerCase() });
@@ -111,6 +111,19 @@ export const updateUserLinks = asyncHandler(async (req, res) => {
     .populate("linkedLearners", "name email avatar");
 
   res.json(sanitizeUser(populated));
+});
+
+export const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) { res.status(404); throw new Error("User not found"); }
+  const { name, email, isActive, studentId, avatar } = req.body;
+  if (name      !== undefined) user.name      = name;
+  if (email     !== undefined) user.email     = email;
+  if (isActive  !== undefined) user.isActive  = isActive;
+  if (studentId !== undefined) user.studentId = studentId;
+  if (avatar    !== undefined) user.avatar    = avatar;
+  await user.save();
+  res.json(sanitizeUser(user));
 });
 
 export const deleteUser = asyncHandler(async (req, res) => {
